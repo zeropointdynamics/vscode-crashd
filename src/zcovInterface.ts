@@ -19,26 +19,24 @@ export interface ZcovFileData {
     lines: ZcovLineData[],
 };
 
-export async function loadZcovData(paths: string[]): Promise<ZcovFileData[]> {
-    if (paths.length === 0) {
-        return [];
-    }
+export interface ZcovData {
+    files: ZcovFileData[],
+    graphs: any[],
+};
 
-    return new Promise<ZcovFileData[]>((resolve, reject) => {
-        const output:ZcovFileData[] = [];
-        for (const path of paths) {
+export async function loadZcovData(path: string): Promise<ZcovData> {
+
+    return new Promise<ZcovData>((resolve, reject) => {
+        try {
             const raw = readFileSync(path, "utf8");
-            try {
-                const data = JSON.parse(raw);
-                console.log(data);
-                output.push(data);
-            } catch(err) {
-                console.error(`json parse error: ${err}`);
-                vscode.window.showErrorMessage("JSON parse error");
-                reject();
-                return;
-            }
+            const data = JSON.parse(raw);
+            console.log(data);
+            resolve(data);
+        } catch(err) {
+            console.error(`json parse error: ${err}`);
+            vscode.window.showErrorMessage("JSON parse error");
+            reject();
+            return;
         }
-        resolve(output);
     });
 }
