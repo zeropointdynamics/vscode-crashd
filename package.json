@@ -15,7 +15,8 @@
 		"onCommand:zcov-viewer.toggle",
 		"onCommand:zcov-viewer.reloadZcovFiles",
 		"onCommand:zcov-viewer.selectBuildDirectory",
-		"onCommand:zcov-viewer.dumpPathsWithCoverageData"
+		"onCommand:zcov-viewer.dumpPathsWithCoverageData",
+		"onCommand:zcov-viewer.graph"
 	],
 	"engines": {
 		"vscode": "^1.46.0"
@@ -46,6 +47,11 @@
 			{
 				"command": "zcov-viewer.dumpPathsWithCoverageData",
 				"title": "Dump Paths with Coverage Data",
+				"category": "Zcov Viewer"
+			},
+			{
+				"command": "zcov-viewer.graph",
+				"title": "Show Graph",
 				"category": "Zcov Viewer"
 			}
 		],
