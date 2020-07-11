@@ -155,56 +155,38 @@ function getBuildDirectories(): string[] {
 	return buildDirectories;
 }
 
-async function getZcovPaths(progress?: MyProgress, token?: vscode.CancellationToken) {
-	progress?.report({ message: 'Searching .zcov files' });
+async function getZcovPath(progress?: MyProgress, token?: vscode.CancellationToken) {
+	progress?.report({ message: 'Searching for .zcov file' });
 	const buildDirectories = getBuildDirectories();
 
 	let counter = 0;
-	const zcovPaths: Set<string> = new Set();
+	let zcovPath = undefined;
 	for (const buildDirectory of buildDirectories) {
 		await findAllFilesRecursively(buildDirectory, path => {
 			if (path.endsWith('.zcov')) {
-				zcovPaths.add(path);
+				zcovPath = path;
 			}
 			counter++;
-			progress?.report({ message: `[${counter}] Scanning (found ${zcovPaths.size}): ${path}` });
+			progress?.report({ message: `[${counter}] Scanning.` });
 		}, token);
 	}
 
-	return Array.from(zcovPaths);
+	return zcovPath;
 }
 
 let coverageCache = new CoverageCache();
 
 type MyProgress = vscode.Progress<{ message?: string; increment?: number }>;
 
-async function reloadCoverageDataFromPaths(
-	paths: string[], totalPaths: number,
-	progress: MyProgress,
-	token: vscode.CancellationToken) {
-
-	/* Process multiple paths per zcov invocation to avoid some overhead.
-	 * Don't process too many files at once so that the progress bar looks more active. */
-	const chunks = splitArrayInChunks(paths, Math.ceil(paths.length / 30));
-	for (const pathsChunk of chunks) {
-		if (token.isCancellationRequested) {
-			return;
-		}
-
-		await coverageCache.loadZcovFiles(pathsChunk);
-
-		progress.report({
-			increment: 100 * pathsChunk.length / totalPaths,
-			message: `[${coverageCache.loadedZcovFiles.length}/${totalPaths}] Parsing`
-		});
-	}
+async function reloadCoverageDataFromPath(path: string) {
+	await coverageCache.loadZcovFiles(path);
 }
 
 function showNoFilesFoundMessage() {
 	vscode.window.showInformationMessage('Cannot find any .zcov files.');
 }
 
-async function reloadZcovFiles() {
+async function reloadZcovFile() {
 	await vscode.window.withProgress(
 		{
 			location: vscode.ProgressLocation.Notification,
@@ -215,29 +197,19 @@ async function reloadZcovFiles() {
 			coverageCache = new CoverageCache();
 			progress.report({ increment: 0 });
 
-			const zcovPaths = await getZcovPaths(progress, token);
-			if (zcovPaths.length === 0) {
+			const zcovPath = await getZcovPath(progress, token);
+			if (zcovPath === undefined) {
 				showNoFilesFoundMessage();
 				return;
 			}
 
-			/* Shuffle paths make the processing time of the individual chunks more similar. */
-			shuffleArray(zcovPaths);
-			const pathChunks = splitArrayInChunks(zcovPaths, os.cpus().length);
-
-			/* Process chunks asynchronously, so that zcov is invoked multiple times in parallel. */
-			const promises = [];
-			for (const pathChunk of pathChunks) {
-				promises.push(reloadCoverageDataFromPaths(
-					pathChunk, zcovPaths.length, progress, token));
-			}
-			await Promise.all(promises);
+			await reloadCoverageDataFromPath(zcovPath);
 		}
 	);
 }
 
 async function COMMAND_reloadZcovFiles(context: vscode.ExtensionContext) {
-	await reloadZcovFiles();
+	await reloadZcovFile();
 	await showDecorations(context);
 }
 
@@ -264,10 +236,22 @@ async function COMMAND_graph(context: vscode.ExtensionContext) {
 }
 
 async function showGraph(context: vscode.ExtensionContext) {
+	if (!isCoverageDataLoaded()) {
+		await reloadZcovFile();
+	}
+	
+	// TODO: Assuming that the main graph is always called "source_graph"
+	const graph = coverageCache.graphs.get("source_graph")
+	if (graph === undefined) {
+		vscode.window.showInformationMessage('No graph data to show.');
+		return;
+	}
+
 	GraphPanel.createOrShow(context.extensionPath);
 	if (GraphPanel.currentPanel) {
-		// TODO: send the actual json file contents for the graph
-		GraphPanel.currentPanel.doModelUpdate('{"id": "root", "layoutOptions": {"algorithm": "layered", "elk.direction": "DOWN", "hierarchyHandling": "INCLUDE_CHILDREN"}, "children": [{"id": "group_pcre_exec.c", "children": [{"id": "pcre_exec.c6766", "layoutOptions": {"elk.direction": "DOWN"}, "labels": [{"id": "pcre_exec.c6766_label", "text": "6767      while (t < md->end_subject && !IS_NEWLINE(t)) t++;"}], "width": 490, "height": 16}, {"id": "pcre_exec.c1729", "labels": [{"id": "pcre_exec.c1729_label", "text": "1730        if ((rrc = (*PUBL(callout))(&cb)) > 0) RRETURN(MATCH_NOMATCH);"}], "width": 602, "height": 16}, {"id": "pcre_exec.c6553", "labels": [{"id": "pcre_exec.c6553_label", "text": "6554  md->start_subject = (PCRE_PUCHAR)subject;"}], "width": 386, "height": 16}, {"id": "pcre_exec.c1719", "labels": [{"id": "pcre_exec.c1719_label", "text": "1720        cb.start_match      = (int)(mstart - md->start_subject);"}], "width": 554, "height": 16}, {"id": "pcre_exec.c1547", "labels": [{"id": "pcre_exec.c1547_label", "text": "1548          mstart = md->start_match_ptr;   /* In case \\\\K reset it */"}], "width": 578, "height": 16}, {"id": "pcre_exec.c1712", "labels": [{"id": "pcre_exec.c1712_label", "text": "1713        cb.subject          = (PCRE_SPTR)md->start_subject;"}], "width": 514, "height": 16}, {"id": "pcre_exec.c3249", "labels": [{"id": "pcre_exec.c3249_label", "text": "3250        if (ecode[1] != *eptr++) RRETURN(MATCH_NOMATCH);"}], "width": 490, "height": 16}, {"id": "pcre_exec.c2109", "labels": [{"id": "pcre_exec.c2109_label", "text": "2110      break;"}], "width": 138, "height": 16}, {"id": "pcre_exec.c1935", "labels": [{"id": "pcre_exec.c1935_label", "text": "1936        md->start_match_ptr = mstart;"}], "width": 338, "height": 16}, {"id": "pcre_exec.c6935", "labels": [{"id": "pcre_exec.c6935_label", "text": "6936    rc = match(start_match, md->start_code, start_match, 2, md, NULL, 0);"}], "width": 626, "height": 16}], "edges": [{"id": "edge_pcre_exec.c1719pcre_exec.c1719", "source": "pcre_exec.c1719", "target": "pcre_exec.c1719"}, {"id": "edge_pcre_exec.c1719pcre_exec.c1712", "source": "pcre_exec.c1719", "target": "pcre_exec.c1712"}, {"id": "edge_pcre_exec.c1712pcre_exec.c6553", "source": "pcre_exec.c1712", "target": "pcre_exec.c6553"}, {"id": "edge_pcre_exec.c1712pcre_exec.c6935", "source": "pcre_exec.c1712", "target": "pcre_exec.c6935"}, {"id": "edge_pcre_exec.c6935pcre_exec.c6766", "source": "pcre_exec.c6935", "target": "pcre_exec.c6766"}, {"id": "edge_pcre_exec.c1719pcre_exec.c1547", "source": "pcre_exec.c1719", "target": "pcre_exec.c1547"}, {"id": "edge_pcre_exec.c1547pcre_exec.c1935", "source": "pcre_exec.c1547", "target": "pcre_exec.c1935"}, {"id": "edge_pcre_exec.c1935pcre_exec.c2109", "source": "pcre_exec.c1935", "target": "pcre_exec.c2109"}, {"id": "edge_pcre_exec.c2109pcre_exec.c3249", "source": "pcre_exec.c2109", "target": "pcre_exec.c3249"}, {"id": "edge_pcre_exec.c1712pcre_exec.c1712", "source": "pcre_exec.c1712", "target": "pcre_exec.c1712"}], "labels": [{"id": "group_pcre_exec.c_label", "text": "pcre_exec.c", "width": 98, "height": 16}]}, {"id": "group_pcretest.c", "layoutOptions": {"elk.direction": "DOWN"}, "children": [{"id": "pcretest.c2250", "labels": [{"id": "pcretest.c2250_label", "text": "2251  {"}], "width": 66, "height": 16}, {"id": "pcretest.c2283", "labels": [{"id": "pcretest.c2283_label", "text": "2284  HELLO_PCHARS(post_start, cb->subject, cb->start_match,"}], "width": 442, "height": 16}], "edges": [{"id": "edge_pcretest.c2283pcretest.c2250", "source": "pcretest.c2283", "target": "pcretest.c2250"}], "labels": [{"id": "group_pcretest.c_label", "text": "pcretest.c", "width": 90, "height": 16}]}], "edges": [{"id": "edge_pcretest.c2283pcre_exec.c1719", "source": "pcretest.c2283", "target": "pcre_exec.c1719"}, {"id": "edge_pcretest.c2250pcre_exec.c1729", "source": "pcretest.c2250", "target": "pcre_exec.c1729"}]}');
+		// GraphPanel.currentPanel.doModelUpdate('{"id": "root", "layoutOptions": {"algorithm": "layered", "elk.direction": "DOWN", "hierarchyHandling": "INCLUDE_CHILDREN"}, "children": [{"id": "group_pcre_exec.c", "children": [{"id": "pcre_exec.c6766", "layoutOptions": {"elk.direction": "DOWN"}, "labels": [{"id": "pcre_exec.c6766_label", "text": "6767      while (t < md->end_subject && !IS_NEWLINE(t)) t++;"}], "width": 490, "height": 16}, {"id": "pcre_exec.c1729", "labels": [{"id": "pcre_exec.c1729_label", "text": "1730        if ((rrc = (*PUBL(callout))(&cb)) > 0) RRETURN(MATCH_NOMATCH);"}], "width": 602, "height": 16}, {"id": "pcre_exec.c6553", "labels": [{"id": "pcre_exec.c6553_label", "text": "6554  md->start_subject = (PCRE_PUCHAR)subject;"}], "width": 386, "height": 16}, {"id": "pcre_exec.c1719", "labels": [{"id": "pcre_exec.c1719_label", "text": "1720        cb.start_match      = (int)(mstart - md->start_subject);"}], "width": 554, "height": 16}, {"id": "pcre_exec.c1547", "labels": [{"id": "pcre_exec.c1547_label", "text": "1548          mstart = md->start_match_ptr;   /* In case \\\\K reset it */"}], "width": 578, "height": 16}, {"id": "pcre_exec.c1712", "labels": [{"id": "pcre_exec.c1712_label", "text": "1713        cb.subject          = (PCRE_SPTR)md->start_subject;"}], "width": 514, "height": 16}, {"id": "pcre_exec.c3249", "labels": [{"id": "pcre_exec.c3249_label", "text": "3250        if (ecode[1] != *eptr++) RRETURN(MATCH_NOMATCH);"}], "width": 490, "height": 16}, {"id": "pcre_exec.c2109", "labels": [{"id": "pcre_exec.c2109_label", "text": "2110      break;"}], "width": 138, "height": 16}, {"id": "pcre_exec.c1935", "labels": [{"id": "pcre_exec.c1935_label", "text": "1936        md->start_match_ptr = mstart;"}], "width": 338, "height": 16}, {"id": "pcre_exec.c6935", "labels": [{"id": "pcre_exec.c6935_label", "text": "6936    rc = match(start_match, md->start_code, start_match, 2, md, NULL, 0);"}], "width": 626, "height": 16}], "edges": [{"id": "edge_pcre_exec.c1719pcre_exec.c1719", "source": "pcre_exec.c1719", "target": "pcre_exec.c1719"}, {"id": "edge_pcre_exec.c1719pcre_exec.c1712", "source": "pcre_exec.c1719", "target": "pcre_exec.c1712"}, {"id": "edge_pcre_exec.c1712pcre_exec.c6553", "source": "pcre_exec.c1712", "target": "pcre_exec.c6553"}, {"id": "edge_pcre_exec.c1712pcre_exec.c6935", "source": "pcre_exec.c1712", "target": "pcre_exec.c6935"}, {"id": "edge_pcre_exec.c6935pcre_exec.c6766", "source": "pcre_exec.c6935", "target": "pcre_exec.c6766"}, {"id": "edge_pcre_exec.c1719pcre_exec.c1547", "source": "pcre_exec.c1719", "target": "pcre_exec.c1547"}, {"id": "edge_pcre_exec.c1547pcre_exec.c1935", "source": "pcre_exec.c1547", "target": "pcre_exec.c1935"}, {"id": "edge_pcre_exec.c1935pcre_exec.c2109", "source": "pcre_exec.c1935", "target": "pcre_exec.c2109"}, {"id": "edge_pcre_exec.c2109pcre_exec.c3249", "source": "pcre_exec.c2109", "target": "pcre_exec.c3249"}, {"id": "edge_pcre_exec.c1712pcre_exec.c1712", "source": "pcre_exec.c1712", "target": "pcre_exec.c1712"}], "labels": [{"id": "group_pcre_exec.c_label", "text": "pcre_exec.c", "width": 98, "height": 16}]}, {"id": "group_pcretest.c", "layoutOptions": {"elk.direction": "DOWN"}, "children": [{"id": "pcretest.c2250", "labels": [{"id": "pcretest.c2250_label", "text": "2251  {"}], "width": 66, "height": 16}, {"id": "pcretest.c2283", "labels": [{"id": "pcretest.c2283_label", "text": "2284  HELLO_PCHARS(post_start, cb->subject, cb->start_match,"}], "width": 442, "height": 16}], "edges": [{"id": "edge_pcretest.c2283pcretest.c2250", "source": "pcretest.c2283", "target": "pcretest.c2250"}], "labels": [{"id": "group_pcretest.c_label", "text": "pcretest.c", "width": 90, "height": 16}]}], "edges": [{"id": "edge_pcretest.c2283pcre_exec.c1719", "source": "pcretest.c2283", "target": "pcre_exec.c1719"}, {"id": "edge_pcretest.c2250pcre_exec.c1729", "source": "pcretest.c2250", "target": "pcre_exec.c1729"}]}');
+		GraphPanel.currentPanel.doModelUpdate(JSON.stringify(graph.data));
+		console.log(graph.data);
 	}
 }
 
@@ -280,7 +264,7 @@ async function showDecorations(context: vscode.ExtensionContext) {
 
 async function COMMAND_showDecorations(context: vscode.ExtensionContext) {
 	if (!isCoverageDataLoaded()) {
-		await reloadZcovFiles();
+		await reloadZcovFile();
 	}
 	await showDecorations(context);
 }
@@ -432,7 +416,7 @@ async function COMMAND_dumpPathsWithCoverageData() {
 	}
 
 	if (!isCoverageDataLoaded()) {
-		await reloadZcovFiles();
+		await reloadZcovFile();
 	}
 
 	const paths = Array.from(coverageCache.dataByFile.keys());
@@ -446,7 +430,7 @@ async function COMMAND_dumpPathsWithCoverageData() {
 
 async function provideHoverEdges(document: vscode.TextDocument, position: vscode.Position): Promise<vscode.Hover | undefined>{
 	if (!isCoverageDataLoaded()) {
-		await reloadZcovFiles();
+		await reloadZcovFile();
 	}
 
 	const path = document.uri.fsPath;
