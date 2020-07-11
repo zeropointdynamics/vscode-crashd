@@ -49,6 +49,21 @@ export function activate(context: vscode.ExtensionContext) {
 			}
         }
 	});
+	
+	const command = 'zcov.jumpTo';
+  	const commandHandler = (file: string, line_number: number) => {
+		vscode.window.showInformationMessage(`File: ${file} Line: ${line_number}`);
+		const workspacePath = vscode.workspace.workspaceFolders?.[0].uri.path
+		const docUri = vscode.Uri.file(workspacePath + '/' + file);
+		vscode.window.showInformationMessage(`WorkspacePath: ${workspacePath}`);
+		vscode.window.showInformationMessage(`DocUri: ${docUri}`);
+		const options:vscode.TextDocumentShowOptions = {
+			selection: new vscode.Range(new vscode.Position(line_number-1,0), new vscode.Position(line_number-1,0))
+		}
+		vscode.window.showTextDocument(docUri, options);
+  	};
+
+  	context.subscriptions.push(vscode.commands.registerCommand(command, commandHandler));
 
 	if (vscode.window.registerWebviewPanelSerializer) {
 		// Make sure we register a serializer in activation event
@@ -436,7 +451,6 @@ async function provideHoverEdges(document: vscode.TextDocument, position: vscode
 		const lineIndex = lineDataArray[0].line_number - 1;
 		const lineKind = lineDataArray[0].kind;
 		if (position.line == lineIndex ) {
-			vscode.window.showInformationMessage(`This is a highlighted line: ${lineIndex + 1}`);
 			return new Promise<vscode.Hover>((resolve, reject) => {
 				let mdContent = "";
 				if (lineKind != "FLOW_THROUGH" && lineKind != "FLOW_END") {
@@ -448,15 +462,31 @@ async function provideHoverEdges(document: vscode.TextDocument, position: vscode
 
 				if (dataFrom != undefined) {
 					const len = dataFrom.length;
-					mdContent += `Data from ${len} locations.  \n`
+					mdContent += `Data from ${len} locations.  \n`;
+					for (const line of dataFrom) {
+						const args = [line.file, line.line_number];
+						const jumpUri = vscode.Uri.parse(
+							`command:zcov.jumpTo?${encodeURIComponent(JSON.stringify(args))}`
+						);
+						mdContent += `- [${line.file} line ${line.line_number}](${jumpUri})  \n`;
+					}
+					mdContent += "\n";
 				}
 
 				if (dataTo != undefined) {
 					const len = dataTo.length;
-					mdContent += `Data to ${len} locations. `
+					mdContent += `Data to ${len} locations.  \n`
+					for (const line of dataTo) {
+						const args = [line.file, line.line_number];
+						const jumpUri = vscode.Uri.parse(
+							`command:zcov.jumpTo?${encodeURIComponent(JSON.stringify(args))}`
+						);
+						mdContent += `- [${line.file} line ${line.line_number}](${jumpUri})  \n`;
+					}
 				}
-
-				resolve(new vscode.Hover(new vscode.MarkdownString(mdContent)));
+				const hoverContent = new vscode.MarkdownString(mdContent);
+				hoverContent.isTrusted = true;
+				resolve(new vscode.Hover(hoverContent));
 			});
 		}
 	}
