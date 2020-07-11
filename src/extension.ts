@@ -6,7 +6,7 @@ import { ZcovLineData, ZcovFileData } from './zcovInterface';
 import { findAllFilesRecursively } from './fsScanning';
 import { splitArrayInChunks, shuffleArray } from './arrayUtils';
 import { CoverageCache } from './coverageCache';
-
+import { GraphPanel } from './graphPanel';
 
 let isShowingDecorations: boolean = false;
 
@@ -20,17 +20,17 @@ export function activate(context: vscode.ExtensionContext) {
 	];
 
 	for (const item of commands) {
-		context.subscriptions.push(vscode.commands.registerCommand(item[0], item[1]));
+		context.subscriptions.push(vscode.commands.registerCommand(item[0], () => { item[1](context); }));
 	}
 
 	vscode.window.onDidChangeVisibleTextEditors(async editors => {
 		if (isShowingDecorations) {
-			await COMMAND_showDecorations();
+			await COMMAND_showDecorations(context);
 		}
 	});
 	vscode.workspace.onDidChangeConfiguration(async () => {
 		if (isShowingDecorations) {
-			await COMMAND_showDecorations();
+			await COMMAND_showDecorations(context);
 		}
 	});
 
@@ -51,7 +51,6 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 	
 	const command = 'zcov.jumpTo';
-
   	const commandHandler = (file: string, line_number: number) => {
 		vscode.window.showInformationMessage(`File: ${file} Line: ${line_number}`);
 		const workspacePath = vscode.workspace.workspaceFolders?.[0].uri.path
@@ -65,6 +64,16 @@ export function activate(context: vscode.ExtensionContext) {
   	};
 
   	context.subscriptions.push(vscode.commands.registerCommand(command, commandHandler));
+
+	if (vscode.window.registerWebviewPanelSerializer) {
+		// Make sure we register a serializer in activation event
+		vscode.window.registerWebviewPanelSerializer(GraphPanel.viewType, {
+			async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: any) {
+				console.log(`Got state: ${state}`);
+				GraphPanel.revive(webviewPanel, context.extensionPath);
+			}
+		});
+	}
 }
 
 export function deactivate() { }
@@ -225,21 +234,21 @@ async function reloadZcovFiles() {
 	);
 }
 
-async function COMMAND_reloadZcovFiles() {
+async function COMMAND_reloadZcovFiles(context: vscode.ExtensionContext) {
 	await reloadZcovFiles();
-	await showDecorations();
+	await showDecorations(context);
 }
 
-async function COMMAND_toggleDecorations() {
+async function COMMAND_toggleDecorations(context: vscode.ExtensionContext) {
 	if (isShowingDecorations) {
-		await COMMAND_hideDecorations();
+		await COMMAND_hideDecorations(context);
 	}
 	else {
-		await COMMAND_showDecorations();
+		await COMMAND_showDecorations(context);
 	}
 }
 
-async function COMMAND_hideDecorations() {
+async function COMMAND_hideDecorations(context: vscode.ExtensionContext) {
 	for (const editor of vscode.window.visibleTextEditors) {
 		editor.setDecorations(calledLinesDecorationType, []);
 		editor.setDecorations(execLinesDecorationType, []);
@@ -248,18 +257,23 @@ async function COMMAND_hideDecorations() {
 	isShowingDecorations = false;
 }
 
-async function showDecorations() {
+async function showDecorations(context: vscode.ExtensionContext) {
 	for (const editor of vscode.window.visibleTextEditors) {
 		await decorateEditor(editor);
+	}
+	GraphPanel.createOrShow(context.extensionPath);
+	if (GraphPanel.currentPanel) {
+		// TODO: send the actual json file contents for the graph
+		GraphPanel.currentPanel.doModelUpdate('{"id": "root", "layoutOptions": {"algorithm": "layered", "elk.direction": "DOWN", "hierarchyHandling": "INCLUDE_CHILDREN"}, "children": [{"id": "group_pcre_exec.c", "children": [{"id": "pcre_exec.c6766", "layoutOptions": {"elk.direction": "DOWN"}, "labels": [{"id": "pcre_exec.c6766_label", "text": "6767      while (t < md->end_subject && !IS_NEWLINE(t)) t++;"}], "width": 490, "height": 16}, {"id": "pcre_exec.c1729", "labels": [{"id": "pcre_exec.c1729_label", "text": "1730        if ((rrc = (*PUBL(callout))(&cb)) > 0) RRETURN(MATCH_NOMATCH);"}], "width": 602, "height": 16}, {"id": "pcre_exec.c6553", "labels": [{"id": "pcre_exec.c6553_label", "text": "6554  md->start_subject = (PCRE_PUCHAR)subject;"}], "width": 386, "height": 16}, {"id": "pcre_exec.c1719", "labels": [{"id": "pcre_exec.c1719_label", "text": "1720        cb.start_match      = (int)(mstart - md->start_subject);"}], "width": 554, "height": 16}, {"id": "pcre_exec.c1547", "labels": [{"id": "pcre_exec.c1547_label", "text": "1548          mstart = md->start_match_ptr;   /* In case \\\\K reset it */"}], "width": 578, "height": 16}, {"id": "pcre_exec.c1712", "labels": [{"id": "pcre_exec.c1712_label", "text": "1713        cb.subject          = (PCRE_SPTR)md->start_subject;"}], "width": 514, "height": 16}, {"id": "pcre_exec.c3249", "labels": [{"id": "pcre_exec.c3249_label", "text": "3250        if (ecode[1] != *eptr++) RRETURN(MATCH_NOMATCH);"}], "width": 490, "height": 16}, {"id": "pcre_exec.c2109", "labels": [{"id": "pcre_exec.c2109_label", "text": "2110      break;"}], "width": 138, "height": 16}, {"id": "pcre_exec.c1935", "labels": [{"id": "pcre_exec.c1935_label", "text": "1936        md->start_match_ptr = mstart;"}], "width": 338, "height": 16}, {"id": "pcre_exec.c6935", "labels": [{"id": "pcre_exec.c6935_label", "text": "6936    rc = match(start_match, md->start_code, start_match, 2, md, NULL, 0);"}], "width": 626, "height": 16}], "edges": [{"id": "edge_pcre_exec.c1719pcre_exec.c1719", "source": "pcre_exec.c1719", "target": "pcre_exec.c1719"}, {"id": "edge_pcre_exec.c1719pcre_exec.c1712", "source": "pcre_exec.c1719", "target": "pcre_exec.c1712"}, {"id": "edge_pcre_exec.c1712pcre_exec.c6553", "source": "pcre_exec.c1712", "target": "pcre_exec.c6553"}, {"id": "edge_pcre_exec.c1712pcre_exec.c6935", "source": "pcre_exec.c1712", "target": "pcre_exec.c6935"}, {"id": "edge_pcre_exec.c6935pcre_exec.c6766", "source": "pcre_exec.c6935", "target": "pcre_exec.c6766"}, {"id": "edge_pcre_exec.c1719pcre_exec.c1547", "source": "pcre_exec.c1719", "target": "pcre_exec.c1547"}, {"id": "edge_pcre_exec.c1547pcre_exec.c1935", "source": "pcre_exec.c1547", "target": "pcre_exec.c1935"}, {"id": "edge_pcre_exec.c1935pcre_exec.c2109", "source": "pcre_exec.c1935", "target": "pcre_exec.c2109"}, {"id": "edge_pcre_exec.c2109pcre_exec.c3249", "source": "pcre_exec.c2109", "target": "pcre_exec.c3249"}, {"id": "edge_pcre_exec.c1712pcre_exec.c1712", "source": "pcre_exec.c1712", "target": "pcre_exec.c1712"}], "labels": [{"id": "group_pcre_exec.c_label", "text": "pcre_exec.c", "width": 98, "height": 16}]}, {"id": "group_pcretest.c", "layoutOptions": {"elk.direction": "DOWN"}, "children": [{"id": "pcretest.c2250", "labels": [{"id": "pcretest.c2250_label", "text": "2251  {"}], "width": 66, "height": 16}, {"id": "pcretest.c2283", "labels": [{"id": "pcretest.c2283_label", "text": "2284  HELLO_PCHARS(post_start, cb->subject, cb->start_match,"}], "width": 442, "height": 16}], "edges": [{"id": "edge_pcretest.c2283pcretest.c2250", "source": "pcretest.c2283", "target": "pcretest.c2250"}], "labels": [{"id": "group_pcretest.c_label", "text": "pcretest.c", "width": 90, "height": 16}]}], "edges": [{"id": "edge_pcretest.c2283pcre_exec.c1719", "source": "pcretest.c2283", "target": "pcre_exec.c1719"}, {"id": "edge_pcretest.c2250pcre_exec.c1729", "source": "pcretest.c2250", "target": "pcre_exec.c1729"}]}');
 	}
 	isShowingDecorations = true;
 }
 
-async function COMMAND_showDecorations() {
+async function COMMAND_showDecorations(context: vscode.ExtensionContext) {
 	if (!isCoverageDataLoaded()) {
 		await reloadZcovFiles();
 	}
-	await showDecorations();
+	await showDecorations(context);
 }
 
 function findCachedDataForFile(absolutePath: string): ZcovFileData | undefined {
