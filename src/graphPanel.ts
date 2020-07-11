@@ -84,12 +84,19 @@ export class GraphPanel {
 				switch (message.command) {
 					case 'goto_line':
 						const line_info = message.text.split("|", 2);
-						const target_line_num = line_info[0];
-						const target_filename = line_info[1];
-						// TODO: actually navigate instead of showing message!
-						vscode.window.showErrorMessage(
-							'Clicked ' + target_filename + ':' + target_line_num + '!'
-						);
+						const line_number = line_info[0];
+						const file = line_info[1];
+
+						vscode.window.showInformationMessage(`File: ${file} Line: ${line_number}`);
+						const workspacePath = vscode.workspace.workspaceFolders?.[0].uri.path;
+						vscode.window.showInformationMessage(`WorkspacePath: ${workspacePath}`);
+						const docUri = vscode.Uri.file(workspacePath + '/' + file);
+						vscode.window.showInformationMessage(`DocUri: ${docUri}`);
+						// const options:vscode.TextDocumentShowOptions = {
+						// 	selection: new vscode.Range(new vscode.Position(line_number-1,0), new vscode.Position(line_number-1,0))
+						// }
+						// vscode.window.showTextDocument(docUri, options);
+						vscode.window.showTextDocument(docUri);
 						return;
 				}
 			},
