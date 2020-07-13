@@ -89,6 +89,7 @@ export class GraphPanel {
 					case 'goto_line':
 						const line_info = message.text.split("|", 2);
 						const line_number = line_info[0];
+						console.log(line_number);
 						const file = line_info[1];
 
 						// vscode.window.showInformationMessage(`File: ${file} Line: ${line_number}`);
@@ -99,7 +100,7 @@ export class GraphPanel {
 						// vscode.window.showInformationMessage(`DocUri: ${docUri}`);
 
 						const options:vscode.TextDocumentShowOptions = {
-							selection: new vscode.Range(new vscode.Position(line_number-1,0), new vscode.Position(line_number-1,0)),
+							selection: new vscode.Range(new vscode.Position(line_number-1+1,0), new vscode.Position(line_number-1+1,0)),
 							viewColumn: vscode.ViewColumn.One,
 						}
 						vscode.window.showTextDocument(docUri, options);
