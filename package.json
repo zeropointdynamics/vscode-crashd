@@ -12,10 +12,8 @@
 	"activationEvents": [
 		"onCommand:zcov-viewer.show",
 		"onCommand:zcov-viewer.hide",
-		"onCommand:zcov-viewer.toggle",
 		"onCommand:zcov-viewer.reloadZcovFiles",
 		"onCommand:zcov-viewer.selectBuildDirectory",
-		"onCommand:zcov-viewer.dumpPathsWithCoverageData",
 		"onCommand:zcov-viewer.graph"
 	],
 	"engines": {
@@ -35,18 +33,8 @@
 				"category": "Zcov Viewer"
 			},
 			{
-				"command": "zcov-viewer.toggle",
-				"title": "Toggle",
-				"category": "Zcov Viewer"
-			},
-			{
 				"command": "zcov-viewer.reloadZcovFiles",
 				"title": "Reload (Import .zcov Files)",
-				"category": "Zcov Viewer"
-			},
-			{
-				"command": "zcov-viewer.dumpPathsWithCoverageData",
-				"title": "Dump Paths with Coverage Data",
 				"category": "Zcov Viewer"
 			},
 			{
@@ -56,24 +44,6 @@
 			}
 		],
 		"configuration": [
-			{
-				"title": "Zcov Viewer",
-				"properties": {
-					"zcovViewer.buildDirectories": {
-						"type": "array",
-						"title": "Build Directories",
-						"scope": "window",
-						"description": "Directories that will be included in the search for .zcov files."
-					},
-					"zcovViewer.highlightExecutedLines": {
-						"type": "boolean",
-						"title": "Highlight Executed Lines",
-						"scope": "resource",
-						"description": "Not only mark the called lines but also the lines that have not been executed.",
-						"default": true
-					}
-				}
-			}
 		]
 	},
 	"scripts": {

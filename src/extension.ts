@@ -1,10 +1,6 @@
 import * as vscode from 'vscode';
-import * as fs from 'fs';
-import * as util from 'util';
-import * as os from 'os';
 import { ZcovLineData, ZcovFileData } from './zcovInterface';
 import { findAllFilesRecursively } from './fsScanning';
-import { splitArrayInChunks, shuffleArray } from './arrayUtils';
 import { CoverageCache } from './coverageCache';
 import { GraphPanel } from './graphPanel';
 
@@ -14,9 +10,7 @@ export function activate(context: vscode.ExtensionContext) {
 	const commands: [string, any][] = [
 		['zcov-viewer.show', COMMAND_showDecorations],
 		['zcov-viewer.hide', COMMAND_hideDecorations],
-		['zcov-viewer.toggle', COMMAND_toggleDecorations],
 		['zcov-viewer.reloadZcovFiles', COMMAND_reloadZcovFiles],
-		['zcov-viewer.dumpPathsWithCoverageData', COMMAND_dumpPathsWithCoverageData],
 		['zcov-viewer.graph', COMMAND_graph],
 	];
 
@@ -140,18 +134,8 @@ function getBuildDirectories(): string[] {
 	const workspaceFolderPaths: string[] = [];
 	for (const workspaceFolder of vscode.workspace.workspaceFolders) {
 		workspaceFolderPaths.push(workspaceFolder.uri.fsPath);
-		const config = getWorkspaceFolderConfig(workspaceFolder);
-		const dirs = config.get<string[]>('buildDirectories');
-		if (dirs !== undefined) {
-			for (let dir of dirs) {
-				dir = dir.replace('${workspaceFolder}', workspaceFolder.uri.fsPath);
-				buildDirectories.push(dir);
-			}
-		}
 	}
-	if (buildDirectories.length === 0) {
-		buildDirectories.push(...workspaceFolderPaths);
-	}
+	buildDirectories.push(...workspaceFolderPaths);
 	return buildDirectories;
 }
 
@@ -211,15 +195,6 @@ async function reloadZcovFile() {
 async function COMMAND_reloadZcovFiles(context: vscode.ExtensionContext) {
 	await reloadZcovFile();
 	await showDecorations(context);
-}
-
-async function COMMAND_toggleDecorations(context: vscode.ExtensionContext) {
-	if (isShowingDecorations) {
-		await COMMAND_hideDecorations(context);
-	}
-	else {
-		await COMMAND_showDecorations(context);
-	}
 }
 
 async function COMMAND_hideDecorations(context: vscode.ExtensionContext) {
@@ -404,32 +379,8 @@ async function decorateEditor(editor: vscode.TextEditor) {
 
 	const decorations = createDecorationsForFile(linesDataOfFile);
 	editor.setDecorations(calledLinesDecorationType, decorations.calledLineDecorations);
-	if (config.get<boolean>('highlightExecutedLines')) {
-		editor.setDecorations(execLinesDecorationType, decorations.execLineDecorations);
-		editor.setDecorations(execAfterLinesDecorationType, decorations.execAfterLineDecorations);
-	}
-	else {
-		editor.setDecorations(execLinesDecorationType, []);
-		editor.setDecorations(execAfterLinesDecorationType, []);
-	}
-}
-
-async function COMMAND_dumpPathsWithCoverageData() {
-	if (vscode.workspace.workspaceFolders === undefined) {
-		return;
-	}
-
-	if (!isCoverageDataLoaded()) {
-		await reloadZcovFile();
-	}
-
-	const paths = Array.from(coverageCache.dataByFile.keys());
-	paths.sort();
-	const dumpedPaths = paths.join('\n');
-	const document = await vscode.workspace.openTextDocument({
-		content: dumpedPaths,
-	});
-	vscode.window.showTextDocument(document);
+	editor.setDecorations(execLinesDecorationType, decorations.execLineDecorations);
+	editor.setDecorations(execAfterLinesDecorationType, decorations.execAfterLineDecorations);
 }
 
 async function provideHoverEdges(document: vscode.TextDocument, position: vscode.Position): Promise<vscode.Hover | undefined>{
