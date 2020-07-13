@@ -7,7 +7,7 @@ import { loadZcovData } from './zcovInterface';
  */
 export class CoverageCache {
     dataByFile: Map<string, ZcovFileData> = new Map();
-    graphs: Map<string, any> = new Map(); 
+    graphs:any[] = [];
     loadedZcovFiles: string[] = [];
 
     async loadZcovFiles(zcovPath: string) {
@@ -25,16 +25,8 @@ export class CoverageCache {
                 cachedFileData.lines.push(...fileData.lines);
             }
         }
-        for (const graph of zcovData.graphs) {
-            const cachedGraph = this.graphs.get(graph["name"]);
-            if (cachedGraph === undefined) {
-                this.graphs.set(graph["name"], {
-                    data: graph["data"],
-                });
-            }
-            else {
-                cachedGraph.data = graph["data"];
-            }
+        if (zcovData.graphs.length > 0) {
+            this.graphs = zcovData.graphs;
         }
         this.loadedZcovFiles.push(...zcovPath);
     }
