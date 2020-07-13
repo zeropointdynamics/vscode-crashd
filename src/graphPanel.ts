@@ -98,7 +98,7 @@ export class GraphPanel {
 		);
 	}
 
-	public doModelUpdate(data: string) {
+	public doModelUpdate(data: any) {
 		// Send a message to the webview webview.
 		// You can send any JSON serializable data.
 		this._panel.webview.postMessage({ command: 'update_model', model: data });

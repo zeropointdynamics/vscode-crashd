@@ -69,6 +69,12 @@
             case 'update_model':
                 let graphs = message.model;
                 updateSelect(graphs);
+                let select = document.querySelector('select#current-graph');
+                for (const g of graphs) {
+                    if (g.name == select.value) {
+                        window.GraphModel.update(JSON.stringify(g.data));
+                    }
+                }
                 break;
         }
     });
