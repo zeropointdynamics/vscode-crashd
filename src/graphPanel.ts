@@ -39,10 +39,14 @@ export class GraphPanel {
 		const panel = vscode.window.createWebviewPanel(
 			GraphPanel.viewType,
 			'CrasHD Dataflow',
-			column || vscode.ViewColumn.One,
+			// column || vscode.ViewColumn.One,
+			vscode.ViewColumn.Beside,
 			{
 				// Enable javascript in the webview
 				enableScripts: true,
+
+				// Don't destroy context when hidden
+				retainContextWhenHidden: true,
 
 				// And restrict the webview to only loading content from our extension's `media` directory.
 				// localResourceRoots: [vscode.Uri.file(path.join(extensionPath, 'media'))]
@@ -84,12 +88,22 @@ export class GraphPanel {
 				switch (message.command) {
 					case 'goto_line':
 						const line_info = message.text.split("|", 2);
-						const target_line_num = line_info[0];
-						const target_filename = line_info[1];
-						// TODO: actually navigate instead of showing message!
-						vscode.window.showErrorMessage(
-							'Clicked ' + target_filename + ':' + target_line_num + '!'
-						);
+						const line_number = line_info[0];
+						console.log(line_number);
+						const file = line_info[1];
+
+						// vscode.window.showInformationMessage(`File: ${file} Line: ${line_number}`);
+						const workspacePath = vscode.workspace.workspaceFolders?.[0].uri.path;
+						// vscode.window.showInformationMessage(`WorkspacePath: ${workspacePath}`);
+						const docPath = workspacePath + '/' + file;
+						const docUri = vscode.Uri.file(docPath);
+						// vscode.window.showInformationMessage(`DocUri: ${docUri}`);
+
+						const options:vscode.TextDocumentShowOptions = {
+							selection: new vscode.Range(new vscode.Position(line_number-1+1,0), new vscode.Position(line_number-1+1,0)),
+							viewColumn: vscode.ViewColumn.One,
+						}
+						vscode.window.showTextDocument(docUri, options);
 						return;
 				}
 			},

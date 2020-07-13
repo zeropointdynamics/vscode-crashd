@@ -54,11 +54,11 @@ export function activate(context: vscode.ExtensionContext) {
 	
 	const command = 'zcov.jumpTo';
   	const commandHandler = (file: string, line_number: number) => {
-		vscode.window.showInformationMessage(`File: ${file} Line: ${line_number}`);
+		// vscode.window.showInformationMessage(`File: ${file} Line: ${line_number}`);
 		const workspacePath = vscode.workspace.workspaceFolders?.[0].uri.path
 		const docUri = vscode.Uri.file(workspacePath + '/' + file);
-		vscode.window.showInformationMessage(`WorkspacePath: ${workspacePath}`);
-		vscode.window.showInformationMessage(`DocUri: ${docUri}`);
+		// vscode.window.showInformationMessage(`WorkspacePath: ${workspacePath}`);
+		// vscode.window.showInformationMessage(`DocUri: ${docUri}`);
 		const options:vscode.TextDocumentShowOptions = {
 			selection: new vscode.Range(new vscode.Position(line_number-1,0), new vscode.Position(line_number-1,0))
 		}
