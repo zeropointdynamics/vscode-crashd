@@ -11,7 +11,6 @@ export function activate(context: vscode.ExtensionContext) {
 		['zcov-viewer.show', COMMAND_showDecorations],
 		['zcov-viewer.hide', COMMAND_hideDecorations],
 		['zcov-viewer.reloadZcovFiles', COMMAND_reloadZcovFiles],
-		['zcov-viewer.graph', COMMAND_graph],
 	];
 
 	for (const item of commands) {
@@ -20,13 +19,13 @@ export function activate(context: vscode.ExtensionContext) {
 
 	vscode.window.onDidChangeVisibleTextEditors(async editors => {
 		if (isShowingDecorations) {
-			await COMMAND_showDecorations(context);
+			await COMMAND_showDecorations(context, false);
 		}
 	});
 
 	vscode.workspace.onDidChangeConfiguration(async () => {
 		if (isShowingDecorations) {
-			await COMMAND_showDecorations(context);
+			await COMMAND_showDecorations(context, false);
 		}
 	});
 
@@ -206,9 +205,9 @@ async function COMMAND_hideDecorations(context: vscode.ExtensionContext) {
 	isShowingDecorations = false;
 }
 
-async function COMMAND_graph(context: vscode.ExtensionContext) {
-	await showGraph(context);
-}
+// async function COMMAND_graph(context: vscode.ExtensionContext) {
+// 	await showGraph(context);
+// }
 
 async function showGraph(context: vscode.ExtensionContext) {
 	if (!isCoverageDataLoaded()) {
@@ -234,18 +233,21 @@ async function showGraph(context: vscode.ExtensionContext) {
 	}
 }
 
-async function showDecorations(context: vscode.ExtensionContext) {
+async function showDecorations(context: vscode.ExtensionContext, graph:boolean = true) {
 	for (const editor of vscode.window.visibleTextEditors) {
 		await decorateEditor(editor);
+	}
+	if (graph) {
+		await showGraph(context);
 	}
 	isShowingDecorations = true;
 }
 
-async function COMMAND_showDecorations(context: vscode.ExtensionContext) {
+async function COMMAND_showDecorations(context: vscode.ExtensionContext, graph:boolean = true) {
 	if (!isCoverageDataLoaded()) {
 		await reloadZcovFile();
 	}
-	await showDecorations(context);
+	await showDecorations(context, graph);
 }
 
 function findCachedDataForFile(absolutePath: string): ZcovFileData | undefined {

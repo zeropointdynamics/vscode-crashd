@@ -31,7 +31,11 @@ export class GraphPanel {
 
 		// If we already have a panel, show it.
 		if (GraphPanel.currentPanel) {
-			GraphPanel.currentPanel._panel.reveal(column);
+			if (GraphPanel.currentPanel._panel.viewColumn) {
+				GraphPanel.currentPanel._panel.reveal(GraphPanel.currentPanel._panel.viewColumn);
+			} else {
+				GraphPanel.currentPanel._panel.reveal(vscode.ViewColumn.Beside);
+			}
 			return;
 		}
 

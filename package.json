@@ -12,9 +12,7 @@
 	"activationEvents": [
 		"onCommand:zcov-viewer.show",
 		"onCommand:zcov-viewer.hide",
-		"onCommand:zcov-viewer.reloadZcovFiles",
-		"onCommand:zcov-viewer.selectBuildDirectory",
-		"onCommand:zcov-viewer.graph"
+		"onCommand:zcov-viewer.reloadZcovFiles"
 	],
 	"engines": {
 		"vscode": "^1.46.0"
@@ -34,12 +32,7 @@
 			},
 			{
 				"command": "zcov-viewer.reloadZcovFiles",
-				"title": "Reload (Import .zcov Files)",
-				"category": "Zcov Viewer"
-			},
-			{
-				"command": "zcov-viewer.graph",
-				"title": "Show Graph",
+				"title": "Reload (Load new .zcov File)",
 				"category": "Zcov Viewer"
 			}
 		],
