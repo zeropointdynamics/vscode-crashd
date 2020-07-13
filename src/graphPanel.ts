@@ -39,10 +39,14 @@ export class GraphPanel {
 		const panel = vscode.window.createWebviewPanel(
 			GraphPanel.viewType,
 			'CrasHD Dataflow',
-			column || vscode.ViewColumn.One,
+			// column || vscode.ViewColumn.One,
+			vscode.ViewColumn.Beside,
 			{
 				// Enable javascript in the webview
 				enableScripts: true,
+
+				// Don't destroy context when hidden
+				retainContextWhenHidden: true,
 
 				// And restrict the webview to only loading content from our extension's `media` directory.
 				// localResourceRoots: [vscode.Uri.file(path.join(extensionPath, 'media'))]
@@ -87,16 +91,18 @@ export class GraphPanel {
 						const line_number = line_info[0];
 						const file = line_info[1];
 
-						vscode.window.showInformationMessage(`File: ${file} Line: ${line_number}`);
+						// vscode.window.showInformationMessage(`File: ${file} Line: ${line_number}`);
 						const workspacePath = vscode.workspace.workspaceFolders?.[0].uri.path;
-						vscode.window.showInformationMessage(`WorkspacePath: ${workspacePath}`);
-						const docUri = vscode.Uri.file(workspacePath + '/' + file);
-						vscode.window.showInformationMessage(`DocUri: ${docUri}`);
-						// const options:vscode.TextDocumentShowOptions = {
-						// 	selection: new vscode.Range(new vscode.Position(line_number-1,0), new vscode.Position(line_number-1,0))
-						// }
-						// vscode.window.showTextDocument(docUri, options);
-						vscode.window.showTextDocument(docUri);
+						// vscode.window.showInformationMessage(`WorkspacePath: ${workspacePath}`);
+						const docPath = workspacePath + '/' + file;
+						const docUri = vscode.Uri.file(docPath);
+						// vscode.window.showInformationMessage(`DocUri: ${docUri}`);
+
+						const options:vscode.TextDocumentShowOptions = {
+							selection: new vscode.Range(new vscode.Position(line_number-1,0), new vscode.Position(line_number-1,0)),
+							viewColumn: vscode.ViewColumn.One,
+						}
+						vscode.window.showTextDocument(docUri, options);
 						return;
 				}
 			},
