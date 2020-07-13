@@ -73,11 +73,26 @@
                 for (const g of graphs) {
                     if (g.name == select.value) {
                         window.GraphModel.update(JSON.stringify(g.data));
+                        setTimeout(function(){
+                            for (const s of g.styles) {
+                                set_node_style(s.id, s.font_weight, s.font_color, s.box_color);
+                            }
+                        }, 2000);
                     }
                 }
                 break;
         }
     });
+    function set_node_style(label_id, font_weight, font_color, box_color) {
+        let id = "sprotty_" + label_id;
+        let label = document.getElementById(id);
+        if (label != null) {
+            let box = label.previousSibling;
+            label.style.fontWeight = font_weight;
+            label.style.fill = font_color;
+            box.style.fill = box_color;
+        }
+    }
     </script>
     <script type="text/javascript">
         var TEST_DATA = "{\"id\":\"root\",\"layoutOptions\":{\"algorithm\":\"layered\"},\"children\":[{\"id\":\"n1\",\"width\":30,\"height\":30},{\"id\":\"n2\",\"width\":30,\"height\":30},{\"id\":\"n3\",\"width\":30,\"height\":30}],\"edges\":[{\"id\":\"e1\",\"sources\":[\"n1\"],\"targets\":[\"n2\"]},{\"id\":\"e2\",\"sources\":[\"n1\"],\"targets\":[\"n3\"]}]}";
