@@ -116,6 +116,16 @@ const execAfterLinesDecorationType = vscode.window.createTextEditorDecorationTyp
 	rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
 });
 
+// RED
+const crashLineColor = 'rgba(240, 40, 40, 0.4)';
+const crashRulerColor = 'rgba(240, 40, 40, 0.8)';
+const crashLinesDecorationType = vscode.window.createTextEditorDecorationType({
+	isWholeLine: true,
+	backgroundColor: crashLineColor,
+	overviewRulerColor: crashRulerColor,
+	rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
+});
+
 function getWorkspaceFolderConfig(workspaceFolder: vscode.WorkspaceFolder) {
 	return vscode.workspace.getConfiguration('zcovViewer', workspaceFolder);
 }
@@ -201,6 +211,7 @@ async function COMMAND_hideDecorations(context: vscode.ExtensionContext) {
 		editor.setDecorations(calledLinesDecorationType, []);
 		editor.setDecorations(execLinesDecorationType, []);
 		editor.setDecorations(execAfterLinesDecorationType, []);
+		editor.setDecorations(crashLinesDecorationType, []);
 	}
 	isShowingDecorations = false;
 }
@@ -324,6 +335,13 @@ function createExecAfterLineDecoration(range: vscode.Range) {
 	return decoration;
 }
 
+function createCrashLineDecoration(range: vscode.Range) {
+	const decoration: vscode.DecorationOptions = {
+		range: range
+	};
+	return decoration;
+}
+
 function createCalledLineDecoration(range: vscode.Range, lineMeta: string, lineDataArray: ZcovLineData[]) {
 	// const lineDataByFunction = groupData(lineDataArray, x => x.function_name);
 	// let tooltip = createTooltipForCalledLine(lineDataByFunction);
@@ -345,6 +363,7 @@ class LineDecorationsGroup {
 	calledLineDecorations: vscode.DecorationOptions[] = [];
 	execLineDecorations: vscode.DecorationOptions[] = [];
 	execAfterLineDecorations: vscode.DecorationOptions[] = [];
+	crashLineDecorations: vscode.DecorationOptions[] = [];
 };
 
 function createDecorationsForFile(linesDataOfFile: ZcovLineData[]): LineDecorationsGroup {
@@ -362,6 +381,8 @@ function createDecorationsForFile(linesDataOfFile: ZcovLineData[]): LineDecorati
 			decorations.execLineDecorations.push(createExecLineDecoration(range));
 		} else if (lineKind === "EXEC_AFTER_FLOW_END"){
 			decorations.execAfterLineDecorations.push(createExecAfterLineDecoration(range));
+		} else if (lineKind === "FLOW_END"){
+			decorations.crashLineDecorations.push(createCrashLineDecoration(range));
 		} else {
 			decorations.calledLineDecorations.push(createCalledLineDecoration(range, lineMeta, lineDataArray));
 		}
@@ -383,6 +404,7 @@ async function decorateEditor(editor: vscode.TextEditor) {
 	editor.setDecorations(calledLinesDecorationType, decorations.calledLineDecorations);
 	editor.setDecorations(execLinesDecorationType, decorations.execLineDecorations);
 	editor.setDecorations(execAfterLinesDecorationType, decorations.execAfterLineDecorations);
+	editor.setDecorations(crashLinesDecorationType, decorations.crashLineDecorations);
 }
 
 async function provideHoverEdges(document: vscode.TextDocument, position: vscode.Position): Promise<vscode.Hover | undefined>{
