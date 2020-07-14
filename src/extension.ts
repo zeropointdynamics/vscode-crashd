@@ -1,10 +1,6 @@
 import * as vscode from 'vscode';
-import * as fs from 'fs';
-import * as util from 'util';
-import * as os from 'os';
 import { ZcovLineData, ZcovFileData } from './zcovInterface';
 import { findAllFilesRecursively } from './fsScanning';
-import { splitArrayInChunks, shuffleArray } from './arrayUtils';
 import { CoverageCache } from './coverageCache';
 import { GraphPanel } from './graphPanel';
 
@@ -12,12 +8,9 @@ let isShowingDecorations: boolean = false;
 
 export function activate(context: vscode.ExtensionContext) {
 	const commands: [string, any][] = [
-		['zcov-viewer.show', COMMAND_showDecorations],
-		['zcov-viewer.hide', COMMAND_hideDecorations],
-		['zcov-viewer.toggle', COMMAND_toggleDecorations],
-		['zcov-viewer.reloadZcovFiles', COMMAND_reloadZcovFiles],
-		['zcov-viewer.dumpPathsWithCoverageData', COMMAND_dumpPathsWithCoverageData],
-		['zcov-viewer.graph', COMMAND_graph],
+		['crashd.show', COMMAND_showDecorations],
+		['crashd.hide', COMMAND_hideDecorations],
+		['crashd.reloadZcovFiles', COMMAND_reloadZcovFiles],
 	];
 
 	for (const item of commands) {
@@ -26,13 +19,13 @@ export function activate(context: vscode.ExtensionContext) {
 
 	vscode.window.onDidChangeVisibleTextEditors(async editors => {
 		if (isShowingDecorations) {
-			await COMMAND_showDecorations(context);
+			await COMMAND_showDecorations(context, false);
 		}
 	});
 
 	vscode.workspace.onDidChangeConfiguration(async () => {
 		if (isShowingDecorations) {
-			await COMMAND_showDecorations(context);
+			await COMMAND_showDecorations(context, false);
 		}
 	});
 
@@ -52,7 +45,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
 	});
 	
-	const command = 'zcov.jumpTo';
+	const command = 'crashd.jumpTo';
   	const commandHandler = (file: string, line_number: number) => {
 		// vscode.window.showInformationMessage(`File: ${file} Line: ${line_number}`);
 		const workspacePath = vscode.workspace.workspaceFolders?.[0].uri.path
@@ -140,18 +133,8 @@ function getBuildDirectories(): string[] {
 	const workspaceFolderPaths: string[] = [];
 	for (const workspaceFolder of vscode.workspace.workspaceFolders) {
 		workspaceFolderPaths.push(workspaceFolder.uri.fsPath);
-		const config = getWorkspaceFolderConfig(workspaceFolder);
-		const dirs = config.get<string[]>('buildDirectories');
-		if (dirs !== undefined) {
-			for (let dir of dirs) {
-				dir = dir.replace('${workspaceFolder}', workspaceFolder.uri.fsPath);
-				buildDirectories.push(dir);
-			}
-		}
 	}
-	if (buildDirectories.length === 0) {
-		buildDirectories.push(...workspaceFolderPaths);
-	}
+	buildDirectories.push(...workspaceFolderPaths);
 	return buildDirectories;
 }
 
@@ -213,15 +196,6 @@ async function COMMAND_reloadZcovFiles(context: vscode.ExtensionContext) {
 	await showDecorations(context);
 }
 
-async function COMMAND_toggleDecorations(context: vscode.ExtensionContext) {
-	if (isShowingDecorations) {
-		await COMMAND_hideDecorations(context);
-	}
-	else {
-		await COMMAND_showDecorations(context);
-	}
-}
-
 async function COMMAND_hideDecorations(context: vscode.ExtensionContext) {
 	for (const editor of vscode.window.visibleTextEditors) {
 		editor.setDecorations(calledLinesDecorationType, []);
@@ -231,9 +205,9 @@ async function COMMAND_hideDecorations(context: vscode.ExtensionContext) {
 	isShowingDecorations = false;
 }
 
-async function COMMAND_graph(context: vscode.ExtensionContext) {
-	await showGraph(context);
-}
+// async function COMMAND_graph(context: vscode.ExtensionContext) {
+// 	await showGraph(context);
+// }
 
 async function showGraph(context: vscode.ExtensionContext) {
 	if (!isCoverageDataLoaded()) {
@@ -259,18 +233,21 @@ async function showGraph(context: vscode.ExtensionContext) {
 	}
 }
 
-async function showDecorations(context: vscode.ExtensionContext) {
+async function showDecorations(context: vscode.ExtensionContext, graph:boolean = true) {
 	for (const editor of vscode.window.visibleTextEditors) {
 		await decorateEditor(editor);
+	}
+	if (graph) {
+		await showGraph(context);
 	}
 	isShowingDecorations = true;
 }
 
-async function COMMAND_showDecorations(context: vscode.ExtensionContext) {
+async function COMMAND_showDecorations(context: vscode.ExtensionContext, graph:boolean = true) {
 	if (!isCoverageDataLoaded()) {
 		await reloadZcovFile();
 	}
-	await showDecorations(context);
+	await showDecorations(context, graph);
 }
 
 function findCachedDataForFile(absolutePath: string): ZcovFileData | undefined {
@@ -404,32 +381,8 @@ async function decorateEditor(editor: vscode.TextEditor) {
 
 	const decorations = createDecorationsForFile(linesDataOfFile);
 	editor.setDecorations(calledLinesDecorationType, decorations.calledLineDecorations);
-	if (config.get<boolean>('highlightExecutedLines')) {
-		editor.setDecorations(execLinesDecorationType, decorations.execLineDecorations);
-		editor.setDecorations(execAfterLinesDecorationType, decorations.execAfterLineDecorations);
-	}
-	else {
-		editor.setDecorations(execLinesDecorationType, []);
-		editor.setDecorations(execAfterLinesDecorationType, []);
-	}
-}
-
-async function COMMAND_dumpPathsWithCoverageData() {
-	if (vscode.workspace.workspaceFolders === undefined) {
-		return;
-	}
-
-	if (!isCoverageDataLoaded()) {
-		await reloadZcovFile();
-	}
-
-	const paths = Array.from(coverageCache.dataByFile.keys());
-	paths.sort();
-	const dumpedPaths = paths.join('\n');
-	const document = await vscode.workspace.openTextDocument({
-		content: dumpedPaths,
-	});
-	vscode.window.showTextDocument(document);
+	editor.setDecorations(execLinesDecorationType, decorations.execLineDecorations);
+	editor.setDecorations(execAfterLinesDecorationType, decorations.execAfterLineDecorations);
 }
 
 async function provideHoverEdges(document: vscode.TextDocument, position: vscode.Position): Promise<vscode.Hover | undefined>{
@@ -463,7 +416,7 @@ async function provideHoverEdges(document: vscode.TextDocument, position: vscode
 					for (const line of dataFrom) {
 						const args = [line.file, line.line_number];
 						const jumpUri = vscode.Uri.parse(
-							`command:zcov.jumpTo?${encodeURIComponent(JSON.stringify(args))}`
+							`command:crashd.jumpTo?${encodeURIComponent(JSON.stringify(args))}`
 						);
 						mdContent += `- [${line.file} line ${line.line_number}](${jumpUri})  \n`;
 					}
@@ -476,7 +429,7 @@ async function provideHoverEdges(document: vscode.TextDocument, position: vscode
 					for (const line of dataTo) {
 						const args = [line.file, line.line_number];
 						const jumpUri = vscode.Uri.parse(
-							`command:zcov.jumpTo?${encodeURIComponent(JSON.stringify(args))}`
+							`command:crashd.jumpTo?${encodeURIComponent(JSON.stringify(args))}`
 						);
 						mdContent += `- [${line.file} line ${line.line_number}](${jumpUri})  \n`;
 					}
