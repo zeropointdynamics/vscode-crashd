@@ -8,9 +8,9 @@ let isShowingDecorations: boolean = false;
 
 export function activate(context: vscode.ExtensionContext) {
 	const commands: [string, any][] = [
-		['zcov-viewer.show', COMMAND_showDecorations],
-		['zcov-viewer.hide', COMMAND_hideDecorations],
-		['zcov-viewer.reloadZcovFiles', COMMAND_reloadZcovFiles],
+		['crashd.show', COMMAND_showDecorations],
+		['crashd.hide', COMMAND_hideDecorations],
+		['crashd.reloadZcovFiles', COMMAND_reloadZcovFiles],
 	];
 
 	for (const item of commands) {
@@ -45,7 +45,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
 	});
 	
-	const command = 'zcov.jumpTo';
+	const command = 'crashd.jumpTo';
   	const commandHandler = (file: string, line_number: number) => {
 		// vscode.window.showInformationMessage(`File: ${file} Line: ${line_number}`);
 		const workspacePath = vscode.workspace.workspaceFolders?.[0].uri.path
@@ -416,7 +416,7 @@ async function provideHoverEdges(document: vscode.TextDocument, position: vscode
 					for (const line of dataFrom) {
 						const args = [line.file, line.line_number];
 						const jumpUri = vscode.Uri.parse(
-							`command:zcov.jumpTo?${encodeURIComponent(JSON.stringify(args))}`
+							`command:crashd.jumpTo?${encodeURIComponent(JSON.stringify(args))}`
 						);
 						mdContent += `- [${line.file} line ${line.line_number}](${jumpUri})  \n`;
 					}
@@ -429,7 +429,7 @@ async function provideHoverEdges(document: vscode.TextDocument, position: vscode
 					for (const line of dataTo) {
 						const args = [line.file, line.line_number];
 						const jumpUri = vscode.Uri.parse(
-							`command:zcov.jumpTo?${encodeURIComponent(JSON.stringify(args))}`
+							`command:crashd.jumpTo?${encodeURIComponent(JSON.stringify(args))}`
 						);
 						mdContent += `- [${line.file} line ${line.line_number}](${jumpUri})  \n`;
 					}
