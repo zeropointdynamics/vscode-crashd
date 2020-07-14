@@ -216,10 +216,6 @@ async function COMMAND_hideDecorations(context: vscode.ExtensionContext) {
 	isShowingDecorations = false;
 }
 
-// async function COMMAND_graph(context: vscode.ExtensionContext) {
-// 	await showGraph(context);
-// }
-
 async function showGraph(context: vscode.ExtensionContext) {
 	if (!isCoverageDataLoaded()) {
 		await reloadZcovFile();
@@ -293,31 +289,11 @@ function groupData<T, Key>(values: T[], getKey: (value: T) => Key): Map<Key, T[]
 	return map;
 }
 
-// function computeSum<T>(values: T[], getSummand: (value: T) => number) {
-// 	return values.reduce((sum, value) => sum + getSummand(value), 0);
-// }
-
-// function sumTotalCalls(lines: ZcovLineData[]): number {
-// 	return computeSum(lines, x => x.count);
-// }
-
 function createRangeForLine(lineIndex: number) {
 	return new vscode.Range(
 		new vscode.Position(lineIndex, 0),
 		new vscode.Position(lineIndex, 100000));
 }
-
-// function createTooltipForCalledLine(lineDataByFunction: Map<string, ZcovLineData[]>) {
-// 	let tooltip = '';
-// 	for (const [functionName, dataArray] of lineDataByFunction.entries()) {
-// 		let count = computeSum(dataArray, x => x.count);
-// 		if (count > 0) {
-// 			const demangledName = coverageCache.demangledNames.get(functionName)!;
-// 			tooltip += `${count.toLocaleString()}x in \`${demangledName}\`\n\n`;
-// 		}
-// 	}
-// 	return tooltip;
-// }
 
 function createExecLineDecoration(range: vscode.Range) {
 	const decoration: vscode.DecorationOptions = {
@@ -376,7 +352,6 @@ function createDecorationsForFile(linesDataOfFile: ZcovLineData[]): LineDecorati
 		const lineMeta = lineDataArray[0].meta;
 		const lineKind = lineDataArray[0].kind;
 		const range = createRangeForLine(lineIndex);
-		// const totalCalls = sumTotalCalls(lineDataArray);
 		if (lineKind === "EXEC") {
 			decorations.execLineDecorations.push(createExecLineDecoration(range));
 		} else if (lineKind === "EXEC_AFTER_FLOW_END"){
@@ -429,32 +404,17 @@ async function provideHoverEdges(document: vscode.TextDocument, position: vscode
 					reject();
 					return;
 				}
-				const dataFrom = lineDataArray[0].data_from;
-				const dataTo = lineDataArray[0].data_to;
 
-				if (dataFrom != undefined) {
-					const len = dataFrom.length;
-					mdContent += `Data from ${len} locations.  \n`;
-					for (const line of dataFrom) {
-						const args = [line.file, line.line_number];
-						const jumpUri = vscode.Uri.parse(
-							`command:crashd.jumpTo?${encodeURIComponent(JSON.stringify(args))}`
-						);
-						mdContent += `- [${line.file} line ${line.line_number}](${jumpUri})  \n`;
+				const asm = lineDataArray[0].asm;
+				if (asm && asm.length > 0) {
+					mdContent += "\`\`\`asm\n";
+					for (const inst of asm) {
+						mdContent += `${inst}\n`
 					}
-					mdContent += "\n";
-				}
-
-				if (dataTo != undefined) {
-					const len = dataTo.length;
-					mdContent += `Data to ${len} locations.  \n`
-					for (const line of dataTo) {
-						const args = [line.file, line.line_number];
-						const jumpUri = vscode.Uri.parse(
-							`command:crashd.jumpTo?${encodeURIComponent(JSON.stringify(args))}`
-						);
-						mdContent += `- [${line.file} line ${line.line_number}](${jumpUri})  \n`;
-					}
+					mdContent += "\`\`\`"
+				} else {
+					reject();
+					return;
 				}
 				const hoverContent = new vscode.MarkdownString(mdContent);
 				hoverContent.isTrusted = true;

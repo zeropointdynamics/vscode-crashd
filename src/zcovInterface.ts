@@ -10,6 +10,7 @@ export interface ZcovLineData {
     kind: string,
     line_number: number,
     meta: string,
+    asm: string[],
     data_from: ZcovEdgeData[],
     data_to: ZcovEdgeData[],
 };
