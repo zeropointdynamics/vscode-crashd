@@ -5,10 +5,20 @@
 	"version": "0.1.0",
 	"license": "MIT",
 	"publisher": "ZeropointDynamics",
+	"repository": {
+		"type" : "git",
+		"url" : "https://github.com/zeropointdynamics/CrasHD.git"
+	},
 	"author": {
 		"name": "Ryan Court",
 		"email": "rccourt@zeropointdynamics.com"
 	},
+	"contributors": [
+		{
+			"name": "Kevin Snow",
+			"email": "kevin@zeropointdynamics.com"
+		}
+	],
 	"activationEvents": [
 		"onCommand:crashd.show",
 		"onCommand:crashd.hide",
