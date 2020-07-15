@@ -311,9 +311,16 @@ function createExecAfterLineDecoration(range: vscode.Range) {
 	return decoration;
 }
 
-function createCrashLineDecoration(range: vscode.Range) {
+function createCrashLineDecoration(range: vscode.Range, lineMeta: string) {
 	const decoration: vscode.DecorationOptions = {
-		range: range
+		range: range,
+		renderOptions: {
+			after: {
+				contentText: `   ${lineMeta}`,
+				color: new vscode.ThemeColor('editorCodeLens.foreground'),
+				fontStyle: 'italic',
+			},
+		},
 	};
 	return decoration;
 }
@@ -357,7 +364,7 @@ function createDecorationsForFile(linesDataOfFile: ZcovLineData[]): LineDecorati
 		} else if (lineKind === "EXEC_AFTER_FLOW_END"){
 			decorations.execAfterLineDecorations.push(createExecAfterLineDecoration(range));
 		} else if (lineKind === "FLOW_END"){
-			decorations.crashLineDecorations.push(createCrashLineDecoration(range));
+			decorations.crashLineDecorations.push(createCrashLineDecoration(range, lineMeta));
 		} else {
 			decorations.calledLineDecorations.push(createCalledLineDecoration(range, lineMeta, lineDataArray));
 		}
