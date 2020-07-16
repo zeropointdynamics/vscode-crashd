@@ -14,20 +14,15 @@ export class CoverageCache {
         const zcovData = await loadZcovData(zcovPath);
 
         for (const fileData of zcovData.files) {
-            const cachedFileData = this.dataByFile.get(fileData.file);
-            if (cachedFileData === undefined) {
-                this.dataByFile.set(fileData.file, {
-                    file: fileData.file,
-                    lines: [...fileData.lines],
-                });
-            }
-            else {
-                cachedFileData.lines.push(...fileData.lines);
-            }
+            this.dataByFile.set(fileData.file, {
+                file: fileData.file,
+                lines: [...fileData.lines],
+            });
         }
         if (zcovData.graphs.length > 0) {
             this.graphs = zcovData.graphs;
         }
-        this.loadedZcovFiles.push(...zcovPath);
+        this.loadedZcovFiles.push(zcovPath);
+        console.log(this);
     }
 };

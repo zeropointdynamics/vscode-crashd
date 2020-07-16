@@ -31,7 +31,6 @@ export async function loadZcovData(path: string): Promise<ZcovData> {
         try {
             const raw = readFileSync(path, "utf8");
             const data = JSON.parse(raw);
-            console.log(data);
             resolve(data);
         } catch(err) {
             console.error(`json parse error: ${err}`);
