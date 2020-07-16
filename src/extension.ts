@@ -64,7 +64,7 @@ export function activate(context: vscode.ExtensionContext) {
 		// Make sure we register a serializer in activation event
 		vscode.window.registerWebviewPanelSerializer(GraphPanel.viewType, {
 			async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: any) {
-				console.log(`Got state: ${state}`);
+				// console.log(`Got state: ${state}`);
 				GraphPanel.revive(webviewPanel, context.extensionPath);
 			}
 		});
@@ -236,7 +236,7 @@ async function showGraph(context: vscode.ExtensionContext) {
 		
 		//// Real graph data
 		GraphPanel.currentPanel.doModelUpdate(graph);
-		console.log(graph);
+		// console.log(graph);
 	}
 }
 

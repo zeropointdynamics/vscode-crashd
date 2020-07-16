@@ -93,7 +93,6 @@ export class GraphPanel {
 					case 'goto_line':
 						const line_info = message.text.split("|", 2);
 						const line_number = line_info[0];
-						console.log(line_number);
 						const file = line_info[1];
 
 						// vscode.window.showInformationMessage(`File: ${file} Line: ${line_number}`);
