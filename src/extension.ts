@@ -295,10 +295,20 @@ function createRangeForLine(lineIndex: number) {
 		new vscode.Position(lineIndex, 100000));
 }
 
-function createExecLineDecoration(range: vscode.Range) {
+function createExecLineDecoration(range: vscode.Range, lineMeta: string) {
+	if (lineMeta == undefined) {
+		return {range: range,};
+	}
 	const decoration: vscode.DecorationOptions = {
 		range: range,
-		hoverMessage: 'This line has been executed.',
+		// hoverMessage: 'This line has been executed.',
+		renderOptions: {
+			after: {
+				contentText: `   ${lineMeta}`,
+				color: new vscode.ThemeColor('editorCodeLens.foreground'),
+				fontStyle: 'italic',
+			},
+		},
 	};
 	return decoration;
 }
@@ -360,7 +370,7 @@ function createDecorationsForFile(linesDataOfFile: ZcovLineData[]): LineDecorati
 		const lineKind = lineDataArray[0].kind;
 		const range = createRangeForLine(lineIndex);
 		if (lineKind === "EXEC") {
-			decorations.execLineDecorations.push(createExecLineDecoration(range));
+			decorations.execLineDecorations.push(createExecLineDecoration(range, lineMeta));
 		} else if (lineKind === "EXEC_AFTER_FLOW_END"){
 			decorations.execAfterLineDecorations.push(createExecAfterLineDecoration(range));
 		} else if (lineKind === "FLOW_END"){
@@ -407,12 +417,14 @@ async function provideHoverEdges(document: vscode.TextDocument, position: vscode
 		if (position.line == lineIndex ) {
 			return new Promise<vscode.Hover>((resolve, reject) => {
 				let mdContent = "";
-				if (lineKind != "FLOW_THROUGH" && lineKind != "FLOW_END") {
+
+				if (!["FLOW_THROUGH", "FLOW_END", "EXEC"].includes(lineKind)) {
 					reject();
 					return;
 				}
 
 				const asm = lineDataArray[0].asm;
+
 				if (asm && asm.length > 0) {
 					mdContent += "\`\`\`asm\n";
 					for (const inst of asm) {
@@ -420,6 +432,12 @@ async function provideHoverEdges(document: vscode.TextDocument, position: vscode
 					}
 					mdContent += "\`\`\`"
 				} else {
+					if (lineKind == "EXEC") {
+						const hoverContent = new vscode.MarkdownString("This line has been executed");
+						hoverContent.isTrusted = true;
+						resolve(new vscode.Hover(hoverContent));
+						return;
+					}
 					reject();
 					return;
 				}
