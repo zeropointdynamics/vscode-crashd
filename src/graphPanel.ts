@@ -1,6 +1,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import * as fs from 'fs';
+import { jumpTo } from './extension';
 
 // TODO: probably just move this into the HTML
 const graphTypes = {
@@ -93,21 +94,16 @@ export class GraphPanel {
 					case 'goto_line':
 						const line_info = message.text.split("|", 2);
 						const line_number = line_info[0];
-						console.log(line_number);
+						// console.log(line_number);
 						const file = line_info[1];
-
-						// vscode.window.showInformationMessage(`File: ${file} Line: ${line_number}`);
-						const workspacePath = vscode.workspace.workspaceFolders?.[0].uri.path;
-						// vscode.window.showInformationMessage(`WorkspacePath: ${workspacePath}`);
-						const docPath = workspacePath + '/' + file;
-						const docUri = vscode.Uri.file(docPath);
-						// vscode.window.showInformationMessage(`DocUri: ${docUri}`);
-
+						// console.log(`File: ${file}`);
+						
 						const options:vscode.TextDocumentShowOptions = {
 							selection: new vscode.Range(new vscode.Position(line_number-1+1,0), new vscode.Position(line_number-1+1,0)),
 							viewColumn: vscode.ViewColumn.One,
 						}
-						vscode.window.showTextDocument(docUri, options);
+
+						jumpTo(file, line_number, options);
 						return;
 				}
 			},

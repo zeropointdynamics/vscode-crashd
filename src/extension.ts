@@ -44,21 +44,15 @@ export function activate(context: vscode.ExtensionContext) {
 			}
         }
 	});
-	
-	const command = 'crashd.jumpTo';
+
   	const commandHandler = (file: string, line_number: number) => {
-		// vscode.window.showInformationMessage(`File: ${file} Line: ${line_number}`);
-		const workspacePath = vscode.workspace.workspaceFolders?.[0].uri.path
-		const docUri = vscode.Uri.file(workspacePath + '/' + file);
-		// vscode.window.showInformationMessage(`WorkspacePath: ${workspacePath}`);
-		// vscode.window.showInformationMessage(`DocUri: ${docUri}`);
 		const options:vscode.TextDocumentShowOptions = {
 			selection: new vscode.Range(new vscode.Position(line_number-1,0), new vscode.Position(line_number-1,0))
 		}
-		vscode.window.showTextDocument(docUri, options);
+		jumpTo(file, line_number, options);
   	};
 
-  	context.subscriptions.push(vscode.commands.registerCommand(command, commandHandler));
+  	context.subscriptions.push(vscode.commands.registerCommand('crashd.jumpTo', commandHandler));
 
 	if (vscode.window.registerWebviewPanelSerializer) {
 		// Make sure we register a serializer in activation event
@@ -72,6 +66,33 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() { }
+
+export function jumpTo(file: string, line_number: number, options: vscode.TextDocumentShowOptions){
+	// vscode.window.showInformationMessage(`File: ${file} Line: ${line_number}`);
+	const workspacePath = vscode.workspace.workspaceFolders?.[0].uri.path;
+
+	let docUri = vscode.Uri.file(workspacePath + '/' + file);
+	// vscode.window.showInformationMessage(`WorkspacePath: ${workspacePath}`);
+	// vscode.window.showInformationMessage(`DocUri: ${docUri}`);
+	vscode.window.showTextDocument(docUri, options)
+	.then(undefined, async (err) => {
+		if (err.message.includes("Unable to resolve non-existing file")) {
+			if (workspacePath) {
+				await new Promise((resolve, reject) => {
+					findAllFilesRecursively(workspacePath, path => {
+						if (path.endsWith(file)) {
+							docUri = vscode.Uri.file(path);
+							vscode.window.showTextDocument(docUri, options)
+							.then(undefined, (err) => {
+								vscode.window.showErrorMessage(`Cannot find file: ${file}`);
+							});
+						}
+					});
+				})
+			}
+		}
+	});
+};
 
 // DATAFLOW START = BRIGHTER BLUE
 // CRASH = RED
@@ -134,7 +155,7 @@ function getTextDocumentConfig(document: vscode.TextDocument) {
 	return vscode.workspace.getConfiguration('zcovViewer', document);
 }
 
-function getBuildDirectories(): string[] {
+export function getBuildDirectories(): string[] {
 	if (vscode.workspace.workspaceFolders === undefined) {
 		return [];
 	}
@@ -236,7 +257,6 @@ async function showGraph(context: vscode.ExtensionContext) {
 		
 		//// Real graph data
 		GraphPanel.currentPanel.doModelUpdate(graph);
-		console.log(graph);
 	}
 }
 
