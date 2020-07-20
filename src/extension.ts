@@ -77,8 +77,8 @@ export function deactivate() { }
 // CRASH = RED
 
 // SHOULD BE A DARK BLUE
-const calledLineColor = 'rgba(50, 50, 260, 0.3)';
-const calledRulerColor = 'rgba(50, 50, 260, 0.7)';
+const calledLineColor = 'rgba(50, 40, 260, 0.4)';
+const calledRulerColor = 'rgba(50, 40, 260, 0.7)';
 const calledLinesDecorationType = vscode.window.createTextEditorDecorationType({
 	isWholeLine: true,
 	rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
@@ -87,10 +87,10 @@ const calledLinesDecorationType = vscode.window.createTextEditorDecorationType({
 });
 
 // YELLOWISH
-const execLineColorDark = 'rgba(190, 190, 40, 0.2)';
-const execRulerColorDark = 'rgba(190, 190, 50, 0.5)';
-const execLineColorLight = 'rgba(240, 190, 40, 0.3)';
-const execRulerColorLight = 'rgba(240, 190, 50, 0.7)';
+const execLineColorDark = 'rgba(180, 180, 20, 0.2)';
+const execRulerColorDark = 'rgba(180, 180, 40, 0.5)';
+const execLineColorLight = 'rgba(240, 190, 30, 0.3)';
+const execRulerColorLight = 'rgba(240, 190, 40, 0.7)';
 const execLinesDecorationType = vscode.window.createTextEditorDecorationType({
 	isWholeLine: true,
 	rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
@@ -107,18 +107,18 @@ const execLinesDecorationType = vscode.window.createTextEditorDecorationType({
 });
 
 // GREEN
-const execAfterLineColor = 'rgba(40, 240, 40, 0.2)';
-const execAfterRulerColor = 'rgba(40, 240, 40, 0.6)';
-const execAfterLinesDecorationType = vscode.window.createTextEditorDecorationType({
+const allocLineColor = 'rgba(20, 270, 60, 0.4)';
+const allocRulerColor = 'rgba(20, 270, 60, 0.9)';
+const allocLinesDecorationType = vscode.window.createTextEditorDecorationType({
 	isWholeLine: true,
-	backgroundColor: execAfterLineColor,
-	overviewRulerColor: execAfterRulerColor,
+	backgroundColor: allocLineColor,
+	overviewRulerColor: allocRulerColor,
 	rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
 });
 
 // RED
-const crashLineColor = 'rgba(240, 40, 40, 0.4)';
-const crashRulerColor = 'rgba(240, 40, 40, 0.8)';
+const crashLineColor = 'rgba(260, 40, 40, 0.4)';
+const crashRulerColor = 'rgba(260, 40, 40, 0.9)';
 const crashLinesDecorationType = vscode.window.createTextEditorDecorationType({
 	isWholeLine: true,
 	backgroundColor: crashLineColor,
@@ -210,7 +210,7 @@ async function COMMAND_hideDecorations(context: vscode.ExtensionContext) {
 	for (const editor of vscode.window.visibleTextEditors) {
 		editor.setDecorations(calledLinesDecorationType, []);
 		editor.setDecorations(execLinesDecorationType, []);
-		editor.setDecorations(execAfterLinesDecorationType, []);
+		editor.setDecorations(allocLinesDecorationType, []);
 		editor.setDecorations(crashLinesDecorationType, []);
 	}
 	isShowingDecorations = false;
@@ -313,10 +313,20 @@ function createExecLineDecoration(range: vscode.Range, lineMeta: string) {
 	return decoration;
 }
 
-function createExecAfterLineDecoration(range: vscode.Range) {
+function createAllocLineDecoration(range: vscode.Range, lineMeta: string) {
+	if (lineMeta == undefined) {
+		return {range: range,};
+	}
 	const decoration: vscode.DecorationOptions = {
 		range: range,
-		hoverMessage: 'Executed after crash dataflow ended.'
+		// hoverMessage: 'Allocated buffer that caused the crash.',
+		renderOptions: {
+			after: {
+				contentText: `   ${lineMeta}`,
+				color: new vscode.ThemeColor('editorCodeLens.foreground'),
+				fontStyle: 'italic',
+			},
+		},
 	};
 	return decoration;
 }
@@ -355,7 +365,7 @@ function createCalledLineDecoration(range: vscode.Range, lineMeta: string, lineD
 class LineDecorationsGroup {
 	calledLineDecorations: vscode.DecorationOptions[] = [];
 	execLineDecorations: vscode.DecorationOptions[] = [];
-	execAfterLineDecorations: vscode.DecorationOptions[] = [];
+	allocLineDecorations: vscode.DecorationOptions[] = [];
 	crashLineDecorations: vscode.DecorationOptions[] = [];
 };
 
@@ -371,8 +381,8 @@ function createDecorationsForFile(linesDataOfFile: ZcovLineData[]): LineDecorati
 		const range = createRangeForLine(lineIndex);
 		if (lineKind === "EXEC") {
 			decorations.execLineDecorations.push(createExecLineDecoration(range, lineMeta));
-		} else if (lineKind === "EXEC_AFTER_FLOW_END"){
-			decorations.execAfterLineDecorations.push(createExecAfterLineDecoration(range));
+		} else if (lineKind === "ALLOC"){
+			decorations.allocLineDecorations.push(createAllocLineDecoration(range, lineMeta));
 		} else if (lineKind === "FLOW_END"){
 			decorations.crashLineDecorations.push(createCrashLineDecoration(range, lineMeta));
 		} else {
@@ -395,7 +405,7 @@ async function decorateEditor(editor: vscode.TextEditor) {
 	const decorations = createDecorationsForFile(linesDataOfFile);
 	editor.setDecorations(calledLinesDecorationType, decorations.calledLineDecorations);
 	editor.setDecorations(execLinesDecorationType, decorations.execLineDecorations);
-	editor.setDecorations(execAfterLinesDecorationType, decorations.execAfterLineDecorations);
+	editor.setDecorations(allocLinesDecorationType, decorations.allocLineDecorations);
 	editor.setDecorations(crashLinesDecorationType, decorations.crashLineDecorations);
 }
 
@@ -418,7 +428,7 @@ async function provideHoverEdges(document: vscode.TextDocument, position: vscode
 			return new Promise<vscode.Hover>((resolve, reject) => {
 				let mdContent = "";
 
-				if (!["FLOW_THROUGH", "FLOW_END", "EXEC"].includes(lineKind)) {
+				if (!["FLOW_THROUGH", "FLOW_END", "EXEC", "ALLOC"].includes(lineKind)) {
 					reject();
 					return;
 				}
