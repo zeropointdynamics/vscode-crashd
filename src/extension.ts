@@ -440,3 +440,16 @@ async function provideHoverEdges(document: vscode.TextDocument, position: vscode
 
 	return;
 }
+
+export async function findFile(name: string) {
+	let file: vscode.Uri | undefined;
+	await vscode.workspace.findFiles(`**/${name}`).then((files) => {
+		if (files.length >= 1) {
+			if (files.length > 1) {
+				vscode.window.showWarningMessage(`Found more than one file named: ${name}`);
+			}
+			file = files[0];
+		}
+	});
+	return file;
+}

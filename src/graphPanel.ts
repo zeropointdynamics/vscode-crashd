@@ -1,6 +1,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import * as fs from 'fs';
+import { findFile } from './extension';
 
 // TODO: probably just move this into the HTML
 const graphTypes = {
@@ -83,22 +84,26 @@ export class GraphPanel {
 
 		// Handle messages from the webview
 		this._panel.webview.onDidReceiveMessage(
-			message => {
+			async message => {
 				switch (message.command) {
 					case 'goto_line':
 						const line_info = message.text.split("|", 2);
 						const line_number = line_info[0];
 						const file = line_info[1];
-
-						const workspacePath = vscode.workspace.workspaceFolders?.[0].uri.path;
-						const docPath = workspacePath + '/' + file;
-						const docUri = vscode.Uri.file(docPath);
-
 						const options:vscode.TextDocumentShowOptions = {
 							selection: new vscode.Range(new vscode.Position(line_number-1+1,0), new vscode.Position(line_number-1+1,0)),
 							viewColumn: vscode.ViewColumn.One,
 						}
-						vscode.window.showTextDocument(docUri, options);
+
+						let docUri = await findFile(file);
+
+						if (docUri ==  undefined) {
+							const workspacePath = vscode.workspace.workspaceFolders?.[0].uri.path;
+							const docPath = workspacePath + '/' + file;
+							docUri = vscode.Uri.file(docPath);
+						}
+
+						vscode.window.showTextDocument(docUri, options);						
 						return;
 				}
 			},
