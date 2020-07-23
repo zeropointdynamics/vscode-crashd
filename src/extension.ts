@@ -64,7 +64,6 @@ export function activate(context: vscode.ExtensionContext) {
 		// Make sure we register a serializer in activation event
 		vscode.window.registerWebviewPanelSerializer(GraphPanel.viewType, {
 			async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: any) {
-				// console.log(`Got state: ${state}`);
 				GraphPanel.revive(webviewPanel, context.extensionPath);
 			}
 		});
@@ -72,9 +71,6 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() { }
-
-// DATAFLOW START = BRIGHTER BLUE
-// CRASH = RED
 
 // SHOULD BE A DARK BLUE
 const calledLineColor = 'rgba(50, 40, 260, 0.4)';
@@ -125,14 +121,6 @@ const crashLinesDecorationType = vscode.window.createTextEditorDecorationType({
 	overviewRulerColor: crashRulerColor,
 	rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
 });
-
-function getWorkspaceFolderConfig(workspaceFolder: vscode.WorkspaceFolder) {
-	return vscode.workspace.getConfiguration('zcovViewer', workspaceFolder);
-}
-
-function getTextDocumentConfig(document: vscode.TextDocument) {
-	return vscode.workspace.getConfiguration('zcovViewer', document);
-}
 
 function getBuildDirectories(): string[] {
 	if (vscode.workspace.workspaceFolders === undefined) {
@@ -236,7 +224,6 @@ async function showGraph(context: vscode.ExtensionContext) {
 		
 		//// Real graph data
 		GraphPanel.currentPanel.doModelUpdate(graph);
-		// console.log(graph);
 	}
 }
 
@@ -258,14 +245,14 @@ async function COMMAND_showDecorations(context: vscode.ExtensionContext, graph:b
 }
 
 function findCachedDataForFile(absolutePath: string): ZcovFileData | undefined {
-	/* Check if there is cached data for the exact path. */
+	// Check if there is cached data for the absolute path
 	const dataOfFile = coverageCache.dataByFile.get(absolutePath);
 	if (dataOfFile !== undefined) {
 		return dataOfFile;
 	}
-	/* Try to guess which cached data belongs to the given path.
-	 * This might have to be improved in the future when we learn more about
-	 * the ways this can fail. */
+	// Check if there is cached data for the base name
+	// TODO: This will fail for nested files with different absolute paths
+	// 		 but the same base name.
 	for (const [storedPath, dataOfFile] of coverageCache.dataByFile.entries()) {
 		if (absolutePath.endsWith(storedPath)) {
 			return dataOfFile;
@@ -301,7 +288,6 @@ function createExecLineDecoration(range: vscode.Range, lineMeta: string) {
 	}
 	const decoration: vscode.DecorationOptions = {
 		range: range,
-		// hoverMessage: 'This line has been executed.',
 		renderOptions: {
 			after: {
 				contentText: `   ${lineMeta}`,
@@ -319,7 +305,6 @@ function createAllocLineDecoration(range: vscode.Range, lineMeta: string) {
 	}
 	const decoration: vscode.DecorationOptions = {
 		range: range,
-		// hoverMessage: 'Allocated buffer that caused the crash.',
 		renderOptions: {
 			after: {
 				contentText: `   ${lineMeta}`,
@@ -345,12 +330,9 @@ function createCrashLineDecoration(range: vscode.Range, lineMeta: string) {
 	return decoration;
 }
 
-function createCalledLineDecoration(range: vscode.Range, lineMeta: string, lineDataArray: ZcovLineData[]) {
-	// const lineDataByFunction = groupData(lineDataArray, x => x.function_name);
-	// let tooltip = createTooltipForCalledLine(lineDataByFunction);
+function createCalledLineDecoration(range: vscode.Range, lineMeta: string) {
 	const decoration: vscode.DecorationOptions = {
 		range: range,
-		// hoverMessage: tooltip,
 		renderOptions: {
 			after: {
 				contentText: `   ${lineMeta}`,
@@ -386,7 +368,7 @@ function createDecorationsForFile(linesDataOfFile: ZcovLineData[]): LineDecorati
 		} else if (lineKind === "FLOW_END"){
 			decorations.crashLineDecorations.push(createCrashLineDecoration(range, lineMeta));
 		} else {
-			decorations.calledLineDecorations.push(createCalledLineDecoration(range, lineMeta, lineDataArray));
+			decorations.calledLineDecorations.push(createCalledLineDecoration(range, lineMeta));
 		}
 	}
 
@@ -399,8 +381,6 @@ async function decorateEditor(editor: vscode.TextEditor) {
 	if (linesDataOfFile === undefined) {
 		return;
 	}
-
-	const config = getTextDocumentConfig(editor.document);
 
 	const decorations = createDecorationsForFile(linesDataOfFile);
 	editor.setDecorations(calledLinesDecorationType, decorations.calledLineDecorations);

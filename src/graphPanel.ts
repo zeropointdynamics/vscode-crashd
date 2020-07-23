@@ -25,10 +25,6 @@ export class GraphPanel {
 	private _disposables: vscode.Disposable[] = [];
 
 	public static createOrShow(extensionPath: string) {
-		const column = vscode.window.activeTextEditor
-			? vscode.window.activeTextEditor.viewColumn
-			: undefined;
-
 		// If we already have a panel, show it.
 		if (GraphPanel.currentPanel) {
 			if (GraphPanel.currentPanel._panel.viewColumn) {
@@ -43,7 +39,6 @@ export class GraphPanel {
 		const panel = vscode.window.createWebviewPanel(
 			GraphPanel.viewType,
 			'CrasHD Dataflow',
-			// column || vscode.ViewColumn.One,
 			vscode.ViewColumn.Beside,
 			{
 				// Enable javascript in the webview
@@ -95,12 +90,9 @@ export class GraphPanel {
 						const line_number = line_info[0];
 						const file = line_info[1];
 
-						// vscode.window.showInformationMessage(`File: ${file} Line: ${line_number}`);
 						const workspacePath = vscode.workspace.workspaceFolders?.[0].uri.path;
-						// vscode.window.showInformationMessage(`WorkspacePath: ${workspacePath}`);
 						const docPath = workspacePath + '/' + file;
 						const docUri = vscode.Uri.file(docPath);
-						// vscode.window.showInformationMessage(`DocUri: ${docUri}`);
 
 						const options:vscode.TextDocumentShowOptions = {
 							selection: new vscode.Range(new vscode.Position(line_number-1+1,0), new vscode.Position(line_number-1+1,0)),
