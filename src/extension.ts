@@ -122,28 +122,25 @@ const crashLinesDecorationType = vscode.window.createTextEditorDecorationType({
 	rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
 });
 
-function getBuildDirectories(): string[] {
+function getWorkspacePaths(): string[] {
 	if (vscode.workspace.workspaceFolders === undefined) {
 		return [];
 	}
-
-	const buildDirectories: string[] = [];
-	const workspaceFolderPaths: string[] = [];
-	for (const workspaceFolder of vscode.workspace.workspaceFolders) {
-		workspaceFolderPaths.push(workspaceFolder.uri.fsPath);
+	const workspacePaths: string[] = [];
+	for (const workspacePath of vscode.workspace.workspaceFolders) {
+		workspacePaths.push(workspacePath.uri.fsPath);
 	}
-	buildDirectories.push(...workspaceFolderPaths);
-	return buildDirectories;
+	return workspacePaths;
 }
 
 async function getZcovPath(progress?: MyProgress, token?: vscode.CancellationToken) {
 	progress?.report({ message: 'Searching for .zcov file' });
-	const buildDirectories = getBuildDirectories();
+	const workspacePaths = getWorkspacePaths();
 
 	let counter = 0;
 	let zcovPath = undefined;
-	for (const buildDirectory of buildDirectories) {
-		await findAllFilesRecursively(buildDirectory, path => {
+	for (const workspacePath of workspacePaths) {
+		await findAllFilesRecursively(workspacePath, path => {
 			if (path.endsWith('.zcov')) {
 				zcovPath = path;
 			}
@@ -163,10 +160,6 @@ async function reloadCoverageDataFromPath(path: string) {
 	await coverageCache.loadZcovFiles(path);
 }
 
-function showNoFilesFoundMessage() {
-	vscode.window.showInformationMessage('Cannot find any .zcov files.');
-}
-
 async function reloadZcovFile() {
 	await vscode.window.withProgress(
 		{
@@ -180,7 +173,7 @@ async function reloadZcovFile() {
 
 			const zcovPath = await getZcovPath(progress, token);
 			if (zcovPath === undefined) {
-				showNoFilesFoundMessage();
+				vscode.window.showInformationMessage('Cannot find any .zcov files.');
 				return;
 			}
 
