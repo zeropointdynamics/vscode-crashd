@@ -6,8 +6,8 @@
 	"license": "MIT",
 	"publisher": "zp",
 	"repository": {
-		"type" : "git",
-		"url" : "https://github.com/zeropointdynamics/CrasHD.git"
+		"type": "git",
+		"url": "https://github.com/zeropointdynamics/CrasHD.git"
 	},
 	"author": {
 		"name": "Ryan Court",
