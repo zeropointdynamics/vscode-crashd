@@ -23,6 +23,5 @@ export class CoverageCache {
             this.graphs = zcovData.graphs;
         }
         this.loadedZcovFiles.push(zcovPath);
-        console.log(this);
     }
 };

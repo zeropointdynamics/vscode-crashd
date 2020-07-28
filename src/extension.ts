@@ -5,8 +5,12 @@ import { CoverageCache } from './coverageCache';
 import { GraphPanel } from './graphPanel';
 
 let isShowingDecorations: boolean = false;
+export let extensionContext: vscode.ExtensionContext;
 
 export function activate(context: vscode.ExtensionContext) {
+
+	extensionContext = context;
+
 	const commands: [string, any][] = [
 		['crashd.show', COMMAND_showDecorations],
 		['crashd.hide', COMMAND_hideDecorations],
@@ -198,7 +202,7 @@ async function COMMAND_hideDecorations(context: vscode.ExtensionContext) {
 	isShowingDecorations = false;
 }
 
-async function showGraph(context: vscode.ExtensionContext) {
+export async function showGraph(context: vscode.ExtensionContext) {
 	if (!isCoverageDataLoaded()) {
 		await reloadZcovFile();
 	}

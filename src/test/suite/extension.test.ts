@@ -5,6 +5,7 @@ import * as path from 'path';
 // as well as import your extension to test it
 import * as vscode from 'vscode';
 import * as crashd from '../../extension';
+import * as graphPanel from '../../graphPanel';
 
 const testFolderLocation = '/../../../src/test/example/';
 
@@ -14,7 +15,6 @@ suite('Extension Test Suite', () => {
 	test('should generate the coverage cache', async () => {
 		const zcov = path.join(__dirname + testFolderLocation + 'crashd.zcov');
 		await crashd.reloadZcovFile(zcov);
-		sleep(500);
 		const cache = crashd.coverageCache
 		assert.strictEqual(cache.dataByFile.get("vulnerable.c")?.lines.length, 12);
 		assert.strictEqual(cache.graphs.length, 1);
@@ -44,6 +44,23 @@ suite('Extension Test Suite', () => {
 		assert.strictEqual(decorations[0].allocLineDecorations.length, 0);
 		assert.strictEqual(decorations[0].crashLineDecorations.length, 1);
 		vscode.commands.executeCommand('workbench.action.closeActiveEditor');
+	});
+
+	test('should show the graph panel', async () => {
+		const extension = vscode.extensions.getExtension("zp.crashd");
+		if (!extension?.isActive) {
+			await extension?.activate();
+		}
+		const context = crashd.extensionContext;
+		assert.strictEqual(context != undefined, true);
+
+		const zcov = path.join(__dirname + testFolderLocation + 'crashd.zcov');
+		await crashd.reloadZcovFile(zcov);
+		const cache = crashd.coverageCache
+		assert.strictEqual(cache.graphs.length, 1);
+		await crashd.showGraph(context);
+		sleep(500);
+		assert.strictEqual(graphPanel.GraphPanel.currentPanel != undefined, true);
 	});
 });
 
