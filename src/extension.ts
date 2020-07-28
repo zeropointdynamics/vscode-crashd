@@ -47,11 +47,8 @@ export function activate(context: vscode.ExtensionContext) {
 	
 	const command = 'crashd.jumpTo';
   	const commandHandler = (file: string, line_number: number) => {
-		// vscode.window.showInformationMessage(`File: ${file} Line: ${line_number}`);
 		const workspacePath = vscode.workspace.workspaceFolders?.[0].uri.path
 		const docUri = vscode.Uri.file(workspacePath + '/' + file);
-		// vscode.window.showInformationMessage(`WorkspacePath: ${workspacePath}`);
-		// vscode.window.showInformationMessage(`DocUri: ${docUri}`);
 		const options:vscode.TextDocumentShowOptions = {
 			selection: new vscode.Range(new vscode.Position(line_number-1,0), new vscode.Position(line_number-1,0))
 		}
@@ -152,7 +149,7 @@ async function getZcovPath(progress?: MyProgress, token?: vscode.CancellationTok
 	return zcovPath;
 }
 
-let coverageCache = new CoverageCache();
+export let coverageCache = new CoverageCache();
 
 type MyProgress = vscode.Progress<{ message?: string; increment?: number }>;
 
@@ -160,26 +157,30 @@ async function reloadCoverageDataFromPath(path: string) {
 	await coverageCache.loadZcovFiles(path);
 }
 
-async function reloadZcovFile() {
-	await vscode.window.withProgress(
-		{
-			location: vscode.ProgressLocation.Notification,
-			cancellable: true,
-			title: 'Reload Coverage Data',
-		},
-		async (progress, token) => {
-			coverageCache = new CoverageCache();
-			progress.report({ increment: 0 });
-
-			const zcovPath = await getZcovPath(progress, token);
-			if (zcovPath === undefined) {
-				vscode.window.showInformationMessage('Cannot find any .zcov files.');
-				return;
+export async function reloadZcovFile(path:string|undefined = undefined) {
+	if (path == undefined) {
+		await vscode.window.withProgress(
+			{
+				location: vscode.ProgressLocation.Notification,
+				cancellable: true,
+				title: 'Reload Coverage Data',
+			},
+			async (progress, token) => {
+				coverageCache = new CoverageCache();
+				progress.report({ increment: 0 });
+	
+				const zcovPath = await getZcovPath(progress, token);
+				if (zcovPath === undefined) {
+					vscode.window.showInformationMessage('Cannot find any .zcov files.');
+					return;
+				}
+	
+				await reloadCoverageDataFromPath(zcovPath);
 			}
-
-			await reloadCoverageDataFromPath(zcovPath);
-		}
-	);
+		);
+	} else {
+		await reloadCoverageDataFromPath(path);
+	}
 }
 
 async function COMMAND_reloadZcovFiles(context: vscode.ExtensionContext) {
@@ -368,11 +369,13 @@ function createDecorationsForFile(linesDataOfFile: ZcovLineData[]): LineDecorati
 	return decorations;
 }
 
-async function decorateEditor(editor: vscode.TextEditor) {
+export async function decorateEditor(editor: vscode.TextEditor) {
 	const path = editor.document.uri.fsPath;
 	const linesDataOfFile = findCachedDataForFile(path)?.lines;
 	if (linesDataOfFile === undefined) {
-		return;
+		return new Promise(resolve => {
+			resolve(undefined);
+		});
 	}
 
 	const decorations = createDecorationsForFile(linesDataOfFile);
@@ -380,6 +383,9 @@ async function decorateEditor(editor: vscode.TextEditor) {
 	editor.setDecorations(execLinesDecorationType, decorations.execLineDecorations);
 	editor.setDecorations(allocLinesDecorationType, decorations.allocLineDecorations);
 	editor.setDecorations(crashLinesDecorationType, decorations.crashLineDecorations);
+	return new Promise(resolve => {
+		resolve(decorations);
+	});
 }
 
 async function provideHoverEdges(document: vscode.TextDocument, position: vscode.Position): Promise<vscode.Hover | undefined>{

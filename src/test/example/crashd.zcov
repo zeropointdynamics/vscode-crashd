@@ -1,0 +1,1199 @@
+{
+  "files": [
+    {
+      "file": "vulnerable.c",
+      "lines": [
+        {
+          "asm": [
+            "0x400d28: mov rdx, qword ptr [rbp - 0x28] ; ",
+            "0x400d2c: mov eax, dword ptr [rbp - 0x2c] ; ",
+            "0x400d2f: cdqe  ; ",
+            "0x400d31: add rax, rdx ; ",
+            "0x400d34: mov byte ptr [rax], 0 ; ",
+            "0x400d2c: mov eax, dword ptr [rbp - 0x2c] ; ",
+            "0x400d28: mov rdx, qword ptr [rbp - 0x28] ; ",
+            "0x400d2f: cdqe  ; ",
+            "0x400d31: add rax, rdx ; ",
+            ";\n;Crash Summary:\n;  Exploitable: UNKNOWN\n;  Reason: unknown-crash\n;  Crashing Instruction: 0x400d34\n;  Crashing Memory Access: WRITE 0x7f00004cbd39\n;\n0x400d34: mov byte ptr [rax], 0 ; "
+          ],
+          "data_from": [
+            {
+              "file": "vulnerable.c",
+              "line_number": 44
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 44
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 44
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 44
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 44
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 43
+            }
+          ],
+          "data_to": [
+            {
+              "file": "vulnerable.c",
+              "line_number": 44
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 44
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 44
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 44
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 44
+            }
+          ],
+          "kind": "FLOW_END",
+          "line_number": 44,
+          "meta": "Vals: 0x7f00004cbd39,*0x7f000008ec1d,*0x43d11c,-1"
+        },
+        {
+          "asm": [
+            "0x400d1c: mov rax, qword ptr [rbp - 0x28] ; ",
+            "0x400d20: add rax, 1 ; ",
+            "0x400d24: mov qword ptr [rbp - 0x28], rax ; ",
+            "0x400d1c: mov rax, qword ptr [rbp - 0x28] ; ",
+            "0x400d20: add rax, 1 ; ",
+            "0x400d24: mov qword ptr [rbp - 0x28], rax ; "
+          ],
+          "data_from": [
+            {
+              "file": "vulnerable.c",
+              "line_number": 43
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 43
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            }
+          ],
+          "data_to": [
+            {
+              "file": "vulnerable.c",
+              "line_number": 44
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 43
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 43
+            }
+          ],
+          "kind": "FLOW_THROUGH",
+          "line_number": 43,
+          "meta": "Vals: *0x7f000008ec1d,*0x7f000008ec1c"
+        },
+        {
+          "asm": [
+            "0x400cfd: mov rax, qword ptr [rbp - 0x38] ; ",
+            "0x400d01: lea rcx, [rax + 4] ; ",
+            "0x400d05: lea rax, [rbp - 0x28] ; ",
+            "0x400d09: mov edx, 0xa ; ",
+            "0x400d0e: mov rsi, rax ; ",
+            "0x400d11: mov rdi, rcx ; ",
+            "0x400d14: call 0x40f0a0 ; ",
+            "0x40f0a0: mov rax, -0x58 ; ",
+            "0x40f0a7: xor ecx, ecx ; ",
+            "0x40f0a9: mov r8, qword ptr fs:[rax] ; ",
+            "0x40f0ad: jmp 0x40f0f0 ; ",
+            "0x40f0f0: push r15 ; ",
+            "0x40f0f2: push r14 ; ",
+            "0x40f0f4: xor r15d, r15d ; ",
+            "0x40f0f7: push r13 ; ",
+            "0x40f0f9: push r12 ; ",
+            "0x40f0fb: mov r13, rsi ; ",
+            "0x40f0fe: push rbp ; ",
+            "0x40f0ff: push rbx ; ",
+            "0x40f100: xor ebp, ebp ; ",
+            "0x40f102: mov r12, rdi ; ",
+            "0x40f105: sub rsp, 0x18 ; ",
+            "0x40f109: test ecx, ecx ; ",
+            "0x40f10b: jne 0x40f388 ; ",
+            "0x40f111: cmp edx, 1 ; ",
+            "0x40f114: je 0x40f11b ; ",
+            "0x40f116: cmp edx, 0x24 ; ",
+            "0x40f119: jbe 0x40f140 ; ",
+            "0x40f140: movsx rax, byte ptr [r12] ; ",
+            "0x40f145: mov rcx, qword ptr [r8 + 0x68] ; ",
+            "0x40f149: mov rbx, r12 ; ",
+            "0x40f14c: test byte ptr [rcx + rax*2 + 1], 0x20 ; ",
+            "0x40f151: mov rsi, rax ; ",
+            "0x40f154: je 0x40f172 ; ",
+            "0x40f156: nop word ptr cs:[rax + rax] ; ",
+            "0x40f160: add rbx, 1 ; ",
+            "0x40f164: movsx rax, byte ptr [rbx] ; ",
+            "0x40f168: test byte ptr [rcx + rax*2 + 1], 0x20 ; ",
+            "0x40f16d: mov rsi, rax ; ",
+            "0x40f170: jne 0x40f160 ; ",
+            "0x40f172: test sil, sil ; ",
+            "0x40f175: je 0x40f348 ; ",
+            "0x40f17b: cmp sil, 0x2d ; ",
+            "0x40f17f: je 0x40f280 ; ",
+            "0x40f185: cmp sil, 0x2b ; ",
+            "0x40f189: mov dword ptr [rsp + 4], 0 ; ",
+            "0x40f191: jne 0x40f19b ; ",
+            "0x40f19b: cmp sil, 0x30 ; ",
+            "0x40f19f: je 0x40f3e8 ; ",
+            "0x40f1a5: test edx, edx ; ",
+            "0x40f1a7: je 0x40f320 ; ",
+            "0x40f1ad: cmp edx, 0xa ; ",
+            "0x40f1b0: je 0x40f320 ; ",
+            "0x40f320: test r15, r15 ; ",
+            "0x40f323: jne 0x40f480 ; ",
+            "0x40f329: movabs rcx, 0x1999999999999999 ; ",
+            "0x40f333: mov byte ptr [rsp + 2], 5 ; ",
+            "0x40f338: mov edx, 0xa ; ",
+            "0x40f33d: xor r14d, r14d ; ",
+            "0x40f340: jmp 0x40f1db ; ",
+            "0x40f1db: cmp r15, rbx ; ",
+            "0x40f1de: movzx edi, sil ; ",
+            "0x40f1e2: je 0x40f34b ; ",
+            "0x40f1e8: test dil, dil ; ",
+            "0x40f1eb: je 0x40f34b ; ",
+            "0x40f1f1: lea rsi, [r14 - 1] ; ",
+            "0x40f1f5: mov r10, qword ptr [rip + 0x2acc2c] ; ",
+            "0x40f1fc: mov r8, rbx ; ",
+            "0x40f1ff: xor eax, eax ; ",
+            "0x40f201: xor r9d, r9d ; ",
+            "0x40f204: movsxd r11, edx ; ",
+            "0x40f207: mov qword ptr [rsp + 8], rsi ; ",
+            "0x40f20c: jmp 0x40f241 ; ",
+            "0x40f26c: cmp rax, rcx ; ",
+            "0x40f26f: jbe 0x40f210 ; ",
+            "0x40f210: jne 0x40f219 ; ",
+            "0x40f219: imul rax, r11 ; ",
+            "0x40f21d: movzx esi, sil ; ",
+            "0x40f221: add rax, rsi ; ",
+            "0x40f224: mov rsi, r8 ; ",
+            "0x40f227: lea r8, [rsi + 1] ; ",
+            "0x40f22b: movzx edi, byte ptr [rsi + 1] ; ",
+            "0x40f22f: cmp r8, r15 ; ",
+            "0x40f232: je 0x40f2c8 ; ",
+            "0x40f238: test dil, dil ; ",
+            "0x40f23b: je 0x40f2c8 ; ",
+            "0x40f241: lea esi, [rdi - 0x30] ; ",
+            "0x40f244: cmp sil, 9 ; ",
+            "0x40f248: jbe 0x40f264 ; ",
+            "0x40f24a: test r14, r14 ; ",
+            "0x40f24d: jne 0x40f298 ; ",
+            "0x40f24f: test byte ptr [r10 + rdi*2 + 1], 4 ; ",
+            "0x40f255: je 0x40f2c8 ; ",
+            "0x40f257: mov rsi, qword ptr [rip + 0x2acbda] ; ",
+            "0x40f25e: mov esi, dword ptr [rsi + rdi*4] ; ",
+            "0x40f261: sub esi, 0x37 ; ",
+            "0x40f264: movzx edi, sil ; ",
+            "0x40f268: cmp edi, edx ; ",
+            "0x40f26a: jge 0x40f2c8 ; ",
+            "0x40f2c8: cmp rbx, r8 ; ",
+            "0x40f2cb: je 0x40f34b ; ",
+            "0x40f2cd: test r13, r13 ; ",
+            "0x40f2d0: je 0x40f2d6 ; ",
+            "0x40f2d2: mov qword ptr [r13], r8 ; ",
+            "0x40f2d6: test r9d, r9d ; ",
+            "0x40f2d9: je 0x40f3c0 ; ",
+            "0x40f3c0: mov edx, dword ptr [rsp + 4] ; ",
+            "0x40f3c4: test edx, edx ; ",
+            "0x40f3c6: je 0x40f440 ; ",
+            "0x40f440: test rax, rax ; ",
+            "0x40f443: jns 0x40f12b ; ",
+            "0x40f12b: add rsp, 0x18 ; ",
+            "0x40f12f: pop rbx ; ",
+            "0x40f130: pop rbp ; ",
+            "0x40f131: pop r12 ; ",
+            "0x40f133: pop r13 ; ",
+            "0x40f135: pop r14 ; ",
+            "0x40f137: pop r15 ; ",
+            "0x40f139: ret  ; ",
+            "0x400d19: mov dword ptr [rbp - 0x2c], eax ; ",
+            "0x40f1ff: xor eax, eax ; ",
+            "0x40f164: movsx rax, byte ptr [rbx] ; ",
+            "0x40f16d: mov rsi, rax ; ",
+            "0x40f1de: movzx edi, sil ; ",
+            "0x40f22b: movzx edi, byte ptr [rsi + 1] ; ",
+            "0x40f241: lea esi, [rdi - 0x30] ; ",
+            "0x40f21d: movzx esi, sil ; ",
+            "0x40f219: imul rax, r11 ; ",
+            "0x40f221: add rax, rsi ; ",
+            "0x400d19: mov dword ptr [rbp - 0x2c], eax ; ",
+            "0x400cfd: mov rax, qword ptr [rbp - 0x38] ; ",
+            "0x400d01: lea rcx, [rax + 4] ; ",
+            "0x400d11: mov rdi, rcx ; ",
+            "0x40f102: mov r12, rdi ; ",
+            "0x40f149: mov rbx, r12 ; ",
+            "0x40f160: add rbx, 1 ; ",
+            "0x40f1fc: mov r8, rbx ; ",
+            "0x40f224: mov rsi, r8 ; ",
+            "0x400d05: lea rax, [rbp - 0x28] ; ",
+            "0x400d0e: mov rsi, rax ; ",
+            "0x40f0fb: mov r13, rsi ; ",
+            "0x40f227: lea r8, [rsi + 1] ; ",
+            "0x40f2d2: mov qword ptr [r13], r8 ; "
+          ],
+          "data_from": [
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 75
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 9
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 75
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            }
+          ],
+          "data_to": [
+            {
+              "file": "vulnerable.c",
+              "line_number": 44
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 43
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            }
+          ],
+          "kind": "FLOW_THROUGH",
+          "line_number": 42,
+          "meta": "Vals: 0x0,*0x7f000008ebb8,0x6c81c,*0x7f000008ec15,*0x7f000008ec10,(+8 more)"
+        },
+        {
+          "asm": [
+            "0x400b6d: push rbp ; ",
+            "0x400b6e: mov rbp, rsp ; ",
+            "0x400b71: push rbx ; ",
+            "0x400b72: sub rsp, 0x38 ; ",
+            "0x400b76: mov qword ptr [rbp - 0x38], rdi ; ",
+            "0x400b7a: mov rax, qword ptr fs:[0x28] ; ",
+            "0x400b83: mov qword ptr [rbp - 0x18], rax ; ",
+            "0x400b87: xor eax, eax ; ",
+            "0x400b76: mov qword ptr [rbp - 0x38], rdi ; "
+          ],
+          "data_from": [
+            {
+              "file": "vulnerable.c",
+              "line_number": 80
+            }
+          ],
+          "data_to": [
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            }
+          ],
+          "kind": "FLOW_THROUGH",
+          "line_number": 9,
+          "meta": "Vals: *0x7f000008ec10"
+        },
+        {
+          "asm": [
+            "0x400e39: lea rax, [rbp - 0x70] ; ",
+            "0x400e3d: mov rdi, rax ; ",
+            "0x400e40: call 0x400b6d ; ",
+            "0x400e39: lea rax, [rbp - 0x70] ; ",
+            "0x400e3d: mov rdi, rax ; "
+          ],
+          "data_from": [
+            {
+              "file": "vulnerable.c",
+              "line_number": 80
+            }
+          ],
+          "data_to": [
+            {
+              "file": "vulnerable.c",
+              "line_number": 9
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 80
+            }
+          ],
+          "kind": "FLOW_THROUGH",
+          "line_number": 80,
+          "meta": "Vals: *0x7f000008ec10"
+        },
+        {
+          "asm": [
+            "0x400dfe: lea rax, [rbp - 0x70] ; ",
+            "0x400e02: mov edx, 0x64 ; ",
+            "0x400e07: mov rsi, rax ; ",
+            "0x400e0a: mov edi, 0 ; ",
+            "0x400e0f: call 0x44ca10 ; ",
+            "0x44ca10: mov eax, dword ptr [rip + 0x272df6] ; ",
+            "0x44ca16: test eax, eax ; ",
+            "0x44ca18: jne 0x44ca30 ; ",
+            "0x44ca1a: xor eax, eax ; ",
+            "0x44ca1c: syscall  ; ",
+            "0x44ca1e: cmp rax, -0x1000 ; ",
+            "0x44ca24: ja 0x44ca80 ; ",
+            "0x44ca26: ret  ; ",
+            "0x400e14: test rax, rax ; ",
+            "0x400e17: jns 0x400e39 ; ",
+            "0x400dfe: lea rax, [rbp - 0x70] ; ",
+            "0x400e07: mov rsi, rax ; ",
+            "0x400e0a: mov edi, 0 ; ",
+            "0x400e02: mov edx, 0x64 ; ",
+            "0x44ca1c: syscall  ; "
+          ],
+          "data_from": [
+            {
+              "file": "vulnerable.c",
+              "line_number": 75
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 75
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 75
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 75
+            }
+          ],
+          "data_to": [
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 75
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 75
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 75
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 75
+            },
+            {
+              "file": "vulnerable.c",
+              "line_number": 42
+            }
+          ],
+          "kind": "FLOW_THROUGH",
+          "line_number": 75,
+          "meta": "Vals: 0x0,*0x7f000008ec10,0x64,b'4444',b'4hea'"
+        },
+        {
+          "asm": [
+            "0x400ceb: mov rax, qword ptr [rbp - 0x38] ; ",
+            "0x400cef: mov rdi, rax ; ",
+            "0x400cf2: call 0x4004e0 ; ",
+            "0x4004e0: jmp qword ptr [rip + 0x2bbbe2] ; ",
+            "0x441480: pxor xmm0, xmm0 ; ",
+            "0x441484: pxor xmm1, xmm1 ; ",
+            "0x441488: pxor xmm2, xmm2 ; ",
+            "0x44148c: pxor xmm3, xmm3 ; ",
+            "0x441490: mov rax, rdi ; ",
+            "0x441493: mov rcx, rdi ; ",
+            "0x441496: and rcx, 0xfff ; ",
+            "0x44149d: cmp rcx, 0xfcf ; ",
+            "0x4414a4: ja 0x441510 ; ",
+            "0x4414a6: movdqu xmm4, xmmword ptr [rax] ; ",
+            "0x4414aa: pcmpeqb xmm4, xmm0 ; ",
+            "0x4414ae: pmovmskb edx, xmm4 ; ",
+            "0x4414b2: test edx, edx ; ",
+            "0x4414b4: je 0x4414ba ; ",
+            "0x4414ba: and rax, 0xfffffffffffffff0 ; ",
+            "0x4414be: pcmpeqb xmm1, xmmword ptr [rax + 0x10] ; ",
+            "0x4414c3: pcmpeqb xmm2, xmmword ptr [rax + 0x20] ; ",
+            "0x4414c8: pcmpeqb xmm3, xmmword ptr [rax + 0x30] ; ",
+            "0x4414cd: pmovmskb edx, xmm1 ; ",
+            "0x4414d1: pmovmskb r8d, xmm2 ; ",
+            "0x4414d6: pmovmskb ecx, xmm3 ; ",
+            "0x4414da: shl rdx, 0x10 ; ",
+            "0x4414de: shl rcx, 0x10 ; ",
+            "0x4414e2: or rcx, r8 ; ",
+            "0x4414e5: shl rcx, 0x20 ; ",
+            "0x4414e9: or rdx, rcx ; ",
+            "0x4414ec: mov rcx, rdi ; ",
+            "0x4414ef: xor rcx, rax ; ",
+            "0x4414f2: and rax, 0xffffffffffffffc0 ; ",
+            "0x4414f6: sar rdx, cl ; ",
+            "0x4414f9: test rdx, rdx ; ",
+            "0x4414fc: je 0x441580 ; ",
+            "0x441502: bsf rax, rdx ; ",
+            "0x441506: ret  ; ",
+            "0x400cf7: cmp rax, 6 ; ",
+            "0x400cfb: jbe 0x400d45 ; "
+          ],
+          "kind": "EXEC",
+          "line_number": 40
+        },
+        {
+          "asm": [
+            "0x400ccf: mov rax, qword ptr [rbp - 0x38] ; ",
+            "0x400cd3: mov edx, 5 ; ",
+            "0x400cd8: lea rsi, [rip + 0x93f5e] ; ",
+            "0x400cdf: mov rdi, rax ; ",
+            "0x400ce2: call 0x400490 ; ",
+            "0x400490: jmp qword ptr [rip + 0x2bbbe2] ; ",
+            "0x42ac50: test rdx, rdx ; ",
+            "0x42ac53: je 0x42bc14 ; ",
+            "0x42ac59: cmp rdx, 1 ; ",
+            "0x42ac5d: je 0x42bc20 ; ",
+            "0x42ac63: mov r11, rdx ; ",
+            "0x42ac66: mov ecx, esi ; ",
+            "0x42ac68: mov eax, edi ; ",
+            "0x42ac6a: and rcx, 0x3f ; ",
+            "0x42ac6e: and rax, 0x3f ; ",
+            "0x42ac72: cmp ecx, 0x30 ; ",
+            "0x42ac75: ja 0x42acc0 ; ",
+            "0x42acc0: and rsi, 0xfffffffffffffff0 ; ",
+            "0x42acc4: and rdi, 0xfffffffffffffff0 ; ",
+            "0x42acc8: mov edx, 0xffff ; ",
+            "0x42accd: xor r8d, r8d ; ",
+            "0x42acd0: and ecx, 0xf ; ",
+            "0x42acd3: and eax, 0xf ; ",
+            "0x42acd6: pxor xmm0, xmm0 ; ",
+            "0x42acda: cmp ecx, eax ; ",
+            "0x42acdc: je 0x42ad10 ; ",
+            "0x42acde: ja 0x42ace7 ; ",
+            "0x42ace7: movdqa xmm2, xmmword ptr [rdi] ; ",
+            "0x42aceb: movdqa xmm1, xmmword ptr [rsi] ; ",
+            "0x42acef: lea r9, [rax + 0xf] ; ",
+            "0x42acf3: sub r9, rcx ; ",
+            "0x42acf6: lea r10, [rip + 0x6bca3] ; ",
+            "0x42acfd: movsxd r9, dword ptr [r10 + r9*4] ; ",
+            "0x42ad01: pcmpeqb xmm0, xmm1 ; ",
+            "0x42ad05: lea r10, [r10 + r9] ; ",
+            "0x42ad09: jmp r10 ; ",
+            "0x42afa0: pslldq xmm2, 0xd ; ",
+            "0x42afa5: pcmpeqb xmm2, xmm1 ; ",
+            "0x42afa9: psubb xmm2, xmm0 ; ",
+            "0x42afad: pmovmskb r9d, xmm2 ; ",
+            "0x42afb2: shr edx, cl ; ",
+            "0x42afb4: shr r9d, cl ; ",
+            "0x42afb7: sub edx, r9d ; ",
+            "0x42afba: jne 0x42bbf0 ; ",
+            "0x42afc0: movdqa xmm3, xmmword ptr [rdi] ; ",
+            "0x42afc4: lea r9, [rcx + r11 - 0x10] ; ",
+            "0x42afc9: cmp r11, r9 ; ",
+            "0x42afcc: jb 0x42bc14 ; ",
+            "0x42afd2: test r9, r9 ; ",
+            "0x42afd5: je 0x42bc14 ; ",
+            "0x42afdb: mov r11, r9 ; ",
+            "0x42afde: mov rcx, 0x10 ; ",
+            "0x42afe5: mov r9d, 3 ; ",
+            "0x42afeb: lea r10, [rdi + 3] ; ",
+            "0x42afef: and r10, 0xfff ; ",
+            "0x42aff6: sub r10, 0x1000 ; ",
+            "0x42affd: mov rdx, rcx ; ",
+            "0x42b000: add r10, 0x10 ; ",
+            "0x42b004: jg 0x42b060 ; ",
+            "0x42b006: movdqa xmm0, xmmword ptr [rdi + rdx] ; ",
+            "0x42b00b: palignr xmm0, xmmword ptr [rdi + rdx - 0x10], 3 ; ",
+            "0x42b013: pcmpistri xmm0, xmmword ptr [rsi + rdx], 0x1a ; ",
+            "0x42b01a: jbe 0x42bbd0 ; ",
+            "0x42bbd0: jae 0x42bc14 ; ",
+            "0x42bbd2: sub r11, rcx ; ",
+            "0x42bbd5: jbe 0x42bc14 ; ",
+            "0x42bc14: xor eax, eax ; ",
+            "0x42bc16: ret  ; ",
+            "0x400ce7: test eax, eax ; ",
+            "0x400ce9: jne 0x400d67 ; "
+          ],
+          "kind": "EXEC",
+          "line_number": 38
+        },
+        {
+          "asm": [
+            "0x400b89: mov rax, qword ptr [rbp - 0x38] ; ",
+            "0x400b8d: mov edx, 2 ; ",
+            "0x400b92: lea rsi, [rip + 0x9404f] ; ",
+            "0x400b99: mov rdi, rax ; ",
+            "0x400b9c: call 0x400490 ; ",
+            "0x42ac77: cmp eax, 0x30 ; ",
+            "0x42ac7a: ja 0x42acc0 ; ",
+            "0x42ac7c: movdqu xmm1, xmmword ptr [rdi] ; ",
+            "0x42ac80: movdqu xmm2, xmmword ptr [rsi] ; ",
+            "0x42ac84: pxor xmm0, xmm0 ; ",
+            "0x42ac88: pcmpeqb xmm0, xmm1 ; ",
+            "0x42ac8c: pcmpeqb xmm1, xmm2 ; ",
+            "0x42ac90: psubb xmm1, xmm0 ; ",
+            "0x42ac94: pmovmskb edx, xmm1 ; ",
+            "0x42ac98: sub edx, 0xffff ; ",
+            "0x42ac9e: jne 0x42bc00 ; ",
+            "0x42bc00: bsf rdx, rdx ; ",
+            "0x42bc04: sub r11, rdx ; ",
+            "0x42bc07: jbe 0x42bc14 ; ",
+            "0x42bc09: movzx ecx, byte ptr [rsi + rdx] ; ",
+            "0x42bc0d: movzx eax, byte ptr [rdi + rdx] ; ",
+            "0x42bc11: sub eax, ecx ; ",
+            "0x42bc13: ret  ; ",
+            "0x400ba1: test eax, eax ; ",
+            "0x400ba3: jne 0x400ccf ; "
+          ],
+          "kind": "EXEC",
+          "line_number": 13
+        },
+        {
+          "asm": [
+            "0x400de1: lea rdx, [rbp - 0x70] ; ",
+            "0x400de5: mov eax, 0 ; ",
+            "0x400dea: mov ecx, 0xc ; ",
+            "0x400def: mov rdi, rdx ; ",
+            "0x400df2: rep stosq qword ptr [rdi], rax ; ",
+            "0x400df5: mov rdx, rdi ; ",
+            "0x400df8: mov dword ptr [rdx], eax ; ",
+            "0x400dfa: add rdx, 4 ; "
+          ],
+          "kind": "EXEC",
+          "line_number": 72
+        },
+        {
+          "asm": [
+            "0x400dd6: lea rax, [rip + 0x93e8b] ; ",
+            "0x400ddd: mov qword ptr [rbp - 0x78], rax ; "
+          ],
+          "kind": "EXEC",
+          "line_number": 66
+        },
+        {
+          "asm": [
+            "0x400daf: push rbp ; ",
+            "0x400db0: mov rbp, rsp ; ",
+            "0x400db3: sub rsp, 0x90 ; ",
+            "0x400dba: mov dword ptr [rbp - 0x84], edi ; ",
+            "0x400dc0: mov qword ptr [rbp - 0x90], rsi ; ",
+            "0x400dc7: mov rax, qword ptr fs:[0x28] ; ",
+            "0x400dd0: mov qword ptr [rbp - 8], rax ; ",
+            "0x400dd4: xor eax, eax ; "
+          ],
+          "kind": "EXEC",
+          "line_number": 65
+        }
+      ]
+    }
+  ],
+  "graphs": [
+    {
+      "child2parents": {
+        "vulnerable.c41": [
+          [
+            "edge_vulnerable.c41vulnerable.c41",
+            "vulnerable.c41"
+          ],
+          [
+            "edge_vulnerable.c41vulnerable.c74",
+            "vulnerable.c74"
+          ],
+          [
+            "edge_vulnerable.c41vulnerable.c8",
+            "vulnerable.c8"
+          ]
+        ],
+        "vulnerable.c42": [
+          [
+            "edge_vulnerable.c42vulnerable.c42",
+            "vulnerable.c42"
+          ],
+          [
+            "edge_vulnerable.c42vulnerable.c41",
+            "vulnerable.c41"
+          ]
+        ],
+        "vulnerable.c43": [
+          [
+            "edge_vulnerable.c43vulnerable.c43",
+            "vulnerable.c43"
+          ],
+          [
+            "edge_vulnerable.c43vulnerable.c41",
+            "vulnerable.c41"
+          ],
+          [
+            "edge_vulnerable.c43vulnerable.c42",
+            "vulnerable.c42"
+          ]
+        ],
+        "vulnerable.c74": [
+          [
+            "edge_vulnerable.c74vulnerable.c74",
+            "vulnerable.c74"
+          ]
+        ],
+        "vulnerable.c79": [
+          [
+            "edge_vulnerable.c79vulnerable.c79",
+            "vulnerable.c79"
+          ]
+        ],
+        "vulnerable.c8": [
+          [
+            "edge_vulnerable.c8vulnerable.c79",
+            "vulnerable.c79"
+          ]
+        ]
+      },
+      "data": {
+        "children": [
+          {
+            "children": [
+              {
+                "file": "vulnerable.c",
+                "height": 24,
+                "id": "vulnerable.c41",
+                "labels": [
+                  {
+                    "id": "vulnerable.c41_label",
+                    "text": "len = strtol(input + 4, &rest, 10);",
+                    "x": 10,
+                    "y": 4
+                  }
+                ],
+                "line": 41,
+                "width": 300
+              },
+              {
+                "file": "vulnerable.c",
+                "height": 24,
+                "id": "vulnerable.c42",
+                "labels": [
+                  {
+                    "id": "vulnerable.c42_label",
+                    "text": "rest += 1; // skip the first char (should be a space)",
+                    "x": 10,
+                    "y": 4
+                  }
+                ],
+                "line": 42,
+                "width": 444
+              },
+              {
+                "file": "vulnerable.c",
+                "height": 24,
+                "id": "vulnerable.c43",
+                "labels": [
+                  {
+                    "id": "vulnerable.c43_label",
+                    "text": "rest[len] = '\\0'; // truncate string at specified offset",
+                    "x": 10,
+                    "y": 4
+                  }
+                ],
+                "line": 43,
+                "width": 468
+              },
+              {
+                "file": "vulnerable.c",
+                "height": 24,
+                "id": "vulnerable.c8",
+                "labels": [
+                  {
+                    "id": "vulnerable.c8_label",
+                    "text": "{",
+                    "x": 10,
+                    "y": 4
+                  }
+                ],
+                "line": 8,
+                "width": 28
+              }
+            ],
+            "edges": [
+              {
+                "id": "edge_vulnerable.c43vulnerable.c43",
+                "source": "vulnerable.c43",
+                "sourceFile": "vulnerable.c",
+                "sourceLine": 43,
+                "target": "vulnerable.c43",
+                "targetFile": "vulnerable.c",
+                "targetLine": 43
+              },
+              {
+                "id": "edge_vulnerable.c41vulnerable.c43",
+                "source": "vulnerable.c41",
+                "sourceFile": "vulnerable.c",
+                "sourceLine": 41,
+                "target": "vulnerable.c43",
+                "targetFile": "vulnerable.c",
+                "targetLine": 43
+              },
+              {
+                "id": "edge_vulnerable.c41vulnerable.c41",
+                "source": "vulnerable.c41",
+                "sourceFile": "vulnerable.c",
+                "sourceLine": 41,
+                "target": "vulnerable.c41",
+                "targetFile": "vulnerable.c",
+                "targetLine": 41
+              },
+              {
+                "id": "edge_vulnerable.c8vulnerable.c41",
+                "source": "vulnerable.c8",
+                "sourceFile": "vulnerable.c",
+                "sourceLine": 8,
+                "target": "vulnerable.c41",
+                "targetFile": "vulnerable.c",
+                "targetLine": 41
+              },
+              {
+                "id": "edge_vulnerable.c42vulnerable.c43",
+                "source": "vulnerable.c42",
+                "sourceFile": "vulnerable.c",
+                "sourceLine": 42,
+                "target": "vulnerable.c43",
+                "targetFile": "vulnerable.c",
+                "targetLine": 43
+              },
+              {
+                "id": "edge_vulnerable.c42vulnerable.c42",
+                "source": "vulnerable.c42",
+                "sourceFile": "vulnerable.c",
+                "sourceLine": 42,
+                "target": "vulnerable.c42",
+                "targetFile": "vulnerable.c",
+                "targetLine": 42
+              },
+              {
+                "id": "edge_vulnerable.c41vulnerable.c42",
+                "source": "vulnerable.c41",
+                "sourceFile": "vulnerable.c",
+                "sourceLine": 41,
+                "target": "vulnerable.c42",
+                "targetFile": "vulnerable.c",
+                "targetLine": 42
+              }
+            ],
+            "id": "group_process",
+            "labels": [
+              {
+                "height": 24,
+                "id": "group_process_label",
+                "text": "vulnerable.c::process",
+                "width": 188
+              }
+            ],
+            "layoutOptions": {
+              "elk.direction": "DOWN"
+            }
+          },
+          {
+            "children": [
+              {
+                "file": "vulnerable.c",
+                "height": 24,
+                "id": "vulnerable.c74",
+                "labels": [
+                  {
+                    "id": "vulnerable.c74_label",
+                    "text": "if (read(STDIN_FILENO, input, INPUTSIZE) < 0)",
+                    "x": 10,
+                    "y": 4
+                  }
+                ],
+                "line": 74,
+                "width": 380
+              },
+              {
+                "file": "vulnerable.c",
+                "height": 24,
+                "id": "vulnerable.c79",
+                "labels": [
+                  {
+                    "id": "vulnerable.c79_label",
+                    "text": "int ret = process(input);",
+                    "x": 10,
+                    "y": 4
+                  }
+                ],
+                "line": 79,
+                "width": 220
+              }
+            ],
+            "edges": [
+              {
+                "id": "edge_vulnerable.c74vulnerable.c74",
+                "source": "vulnerable.c74",
+                "sourceFile": "vulnerable.c",
+                "sourceLine": 74,
+                "target": "vulnerable.c74",
+                "targetFile": "vulnerable.c",
+                "targetLine": 74
+              },
+              {
+                "id": "edge_vulnerable.c79vulnerable.c79",
+                "source": "vulnerable.c79",
+                "sourceFile": "vulnerable.c",
+                "sourceLine": 79,
+                "target": "vulnerable.c79",
+                "targetFile": "vulnerable.c",
+                "targetLine": 79
+              }
+            ],
+            "id": "group_main",
+            "labels": [
+              {
+                "height": 24,
+                "id": "group_main_label",
+                "text": "vulnerable.c::main",
+                "width": 164
+              }
+            ],
+            "layoutOptions": {
+              "elk.direction": "DOWN"
+            }
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge_vulnerable.c74vulnerable.c41",
+            "source": "vulnerable.c74",
+            "sourceFile": "vulnerable.c",
+            "sourceLine": 74,
+            "target": "vulnerable.c41",
+            "targetFile": "vulnerable.c",
+            "targetLine": 41
+          },
+          {
+            "id": "edge_vulnerable.c79vulnerable.c8",
+            "source": "vulnerable.c79",
+            "sourceFile": "vulnerable.c",
+            "sourceLine": 79,
+            "target": "vulnerable.c8",
+            "targetFile": "vulnerable.c",
+            "targetLine": 8
+          }
+        ],
+        "id": "root",
+        "layoutOptions": {
+          "algorithm": "layered",
+          "elk.direction": "DOWN",
+          "hierarchyHandling": "INCLUDE_CHILDREN"
+        }
+      },
+      "name": "source_graph",
+      "ordering": [
+        "vulnerable.c43",
+        "vulnerable.c41",
+        "vulnerable.c74",
+        "vulnerable.c8",
+        "vulnerable.c79",
+        "vulnerable.c42"
+      ],
+      "parent2children": {
+        "vulnerable.c41": [
+          [
+            "edge_vulnerable.c43vulnerable.c41",
+            "vulnerable.c43"
+          ],
+          [
+            "edge_vulnerable.c41vulnerable.c41",
+            "vulnerable.c41"
+          ],
+          [
+            "edge_vulnerable.c42vulnerable.c41",
+            "vulnerable.c42"
+          ]
+        ],
+        "vulnerable.c42": [
+          [
+            "edge_vulnerable.c43vulnerable.c42",
+            "vulnerable.c43"
+          ],
+          [
+            "edge_vulnerable.c42vulnerable.c42",
+            "vulnerable.c42"
+          ]
+        ],
+        "vulnerable.c43": [
+          [
+            "edge_vulnerable.c43vulnerable.c43",
+            "vulnerable.c43"
+          ]
+        ],
+        "vulnerable.c74": [
+          [
+            "edge_vulnerable.c41vulnerable.c74",
+            "vulnerable.c41"
+          ],
+          [
+            "edge_vulnerable.c74vulnerable.c74",
+            "vulnerable.c74"
+          ]
+        ],
+        "vulnerable.c79": [
+          [
+            "edge_vulnerable.c8vulnerable.c79",
+            "vulnerable.c8"
+          ],
+          [
+            "edge_vulnerable.c79vulnerable.c79",
+            "vulnerable.c79"
+          ]
+        ],
+        "vulnerable.c8": [
+          [
+            "edge_vulnerable.c41vulnerable.c8",
+            "vulnerable.c41"
+          ]
+        ]
+      },
+      "styles": [
+        {
+          "box_color": "maroon",
+          "font_color": "white",
+          "font_weight": "bold",
+          "id": "vulnerable.c43_label"
+        }
+      ],
+      "wave_ordering": [
+        [
+          "vulnerable.c43"
+        ],
+        [
+          "vulnerable.c41",
+          "vulnerable.c42"
+        ],
+        [
+          "vulnerable.c74",
+          "vulnerable.c8"
+        ],
+        [
+          "vulnerable.c79"
+        ]
+      ]
+    }
+  ]
+}
