@@ -1,20 +1,16 @@
-import { ZcovFileData } from './zcovInterface';
-import { loadZcovData } from './zcovInterface';
+import { readFileSync } from 'fs';
+import * as vscode from 'vscode';
 
-/**
- * Cache for all data loaded using zcov. This way we don't have to reload
- * it everytime the user looks at a new file.
- */
+// Cache for data loaded from the crashd.zcov file.
 export class CoverageCache {
-    dataByFile: Map<string, ZcovFileData> = new Map();
+    fileData: Map<string, ZcovFileData> = new Map();
     graphs:any[] = [];
-    loadedZcovFiles: string[] = [];
 
-    async loadZcovFiles(zcovPath: string) {
+    async loadZcovFile(zcovPath: string) {
         const zcovData = await loadZcovData(zcovPath);
 
         for (const fileData of zcovData.files) {
-            this.dataByFile.set(fileData.file, {
+            this.fileData.set(fileData.file, {
                 file: fileData.file,
                 lines: [...fileData.lines],
             });
@@ -22,6 +18,44 @@ export class CoverageCache {
         if (zcovData.graphs.length > 0) {
             this.graphs = zcovData.graphs;
         }
-        this.loadedZcovFiles.push(zcovPath);
     }
 };
+
+export interface ZcovEdgeData {
+    file: string,
+    line_number: number,
+};
+
+export interface ZcovLineData {
+    kind: string,
+    line_number: number,
+    meta: string,
+    asm: string[],
+    data_from: ZcovEdgeData[],
+    data_to: ZcovEdgeData[],
+};
+
+export interface ZcovFileData {
+    file: string,
+    lines: ZcovLineData[],
+};
+
+export interface ZcovData {
+    files: ZcovFileData[],
+    graphs: any[],
+};
+
+export async function loadZcovData(path: string): Promise<ZcovData> {
+    return new Promise<ZcovData>((resolve, reject) => {
+        try {
+            const raw = readFileSync(path, "utf8");
+            const data = JSON.parse(raw);
+            resolve(data);
+        } catch(err) {
+            console.error(`json parse error: ${err}`);
+            vscode.window.showErrorMessage("JSON parse error");
+            reject();
+            return;
+        }
+    });
+}

@@ -15,8 +15,8 @@ suite('Extension Test Suite', () => {
 	test('should generate the coverage cache', async () => {
 		const zcov = path.join(__dirname + testFolderLocation + 'crashd.zcov');
 		await crashd.reloadZcovFile(zcov);
-		const cache = crashd.coverageCache
-		assert.strictEqual(cache.dataByFile.get("vulnerable.c")?.lines.length, 12);
+		const cache = crashd.crashCache
+		assert.strictEqual(cache.fileData.get("vulnerable.c")?.lines.length, 12);
 		assert.strictEqual(cache.graphs.length, 1);
 	});
 
@@ -56,7 +56,7 @@ suite('Extension Test Suite', () => {
 
 		const zcov = path.join(__dirname + testFolderLocation + 'crashd.zcov');
 		await crashd.reloadZcovFile(zcov);
-		const cache = crashd.coverageCache
+		const cache = crashd.crashCache
 		assert.strictEqual(cache.graphs.length, 1);
 		await crashd.showGraph(context);
 		sleep(500);

@@ -1,10 +1,8 @@
 import * as vscode from 'vscode';
-import { ZcovLineData, ZcovFileData } from './zcovInterface';
-import { findAllFilesRecursively } from './fsScanning';
-import { CoverageCache } from './coverageCache';
 import { GraphPanel } from './graphPanel';
+import { CoverageCache, ZcovLineData, ZcovFileData } from './coverageCache';
 
-let isShowingDecorations: boolean = false;
+let decorations: boolean = false;
 export let extensionContext: vscode.ExtensionContext;
 
 export function activate(context: vscode.ExtensionContext) {
@@ -12,9 +10,9 @@ export function activate(context: vscode.ExtensionContext) {
 	extensionContext = context;
 
 	const commands: [string, any][] = [
-		['crashd.show', COMMAND_showDecorations],
-		['crashd.hide', COMMAND_hideDecorations],
-		['crashd.reloadZcovFiles', COMMAND_reloadZcovFiles],
+		['crashd.show', cmd_showDecorations],
+		['crashd.hide', cmd_hideDecorations],
+		['crashd.reloadZcovFiles', cmd_reloadZcovFiles],
 	];
 
 	for (const item of commands) {
@@ -22,20 +20,20 @@ export function activate(context: vscode.ExtensionContext) {
 	}
 
 	vscode.window.onDidChangeVisibleTextEditors(async editors => {
-		if (isShowingDecorations) {
-			await COMMAND_showDecorations(context, false);
+		if (decorations) {
+			await cmd_showDecorations(context, false);
 		}
 	});
 
 	vscode.workspace.onDidChangeConfiguration(async () => {
-		if (isShowingDecorations) {
-			await COMMAND_showDecorations(context, false);
+		if (decorations) {
+			await cmd_showDecorations(context, false);
 		}
 	});
 
 	vscode.languages.registerHoverProvider('c', {
         provideHover(document, position, token) {
-			if (isShowingDecorations) {
+			if (decorations) {
 				return provideHoverEdges(document, position);
 			}
         }
@@ -43,23 +41,11 @@ export function activate(context: vscode.ExtensionContext) {
 	
 	vscode.languages.registerHoverProvider('cpp', {
         provideHover(document, position, token) {
-			if (isShowingDecorations) {
+			if (decorations) {
 				return provideHoverEdges(document, position);
 			}
         }
 	});
-	
-	const command = 'crashd.jumpTo';
-  	const commandHandler = (file: string, line_number: number) => {
-		const workspacePath = vscode.workspace.workspaceFolders?.[0].uri.path
-		const docUri = vscode.Uri.file(workspacePath + '/' + file);
-		const options:vscode.TextDocumentShowOptions = {
-			selection: new vscode.Range(new vscode.Position(line_number-1,0), new vscode.Position(line_number-1,0))
-		}
-		vscode.window.showTextDocument(docUri, options);
-  	};
-
-  	context.subscriptions.push(vscode.commands.registerCommand(command, commandHandler));
 
 	if (vscode.window.registerWebviewPanelSerializer) {
 		// Make sure we register a serializer in activation event
@@ -74,12 +60,12 @@ export function activate(context: vscode.ExtensionContext) {
 export function deactivate() { }
 
 // SHOULD BE A DARK BLUE
-const calledLineColor = 'rgba(50, 40, 260, 0.4)';
+const dataflowLineColor = 'rgba(50, 40, 260, 0.4)';
 const calledRulerColor = 'rgba(50, 40, 260, 0.7)';
-const calledLinesDecorationType = vscode.window.createTextEditorDecorationType({
+const dataflowLinesDecorationType = vscode.window.createTextEditorDecorationType({
 	isWholeLine: true,
 	rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
-	backgroundColor: calledLineColor,
+	backgroundColor: dataflowLineColor,
 	overviewRulerColor: calledRulerColor,
 });
 
@@ -123,92 +109,47 @@ const crashLinesDecorationType = vscode.window.createTextEditorDecorationType({
 	rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
 });
 
-function getWorkspacePaths(): string[] {
-	if (vscode.workspace.workspaceFolders === undefined) {
-		return [];
-	}
-	const workspacePaths: string[] = [];
-	for (const workspacePath of vscode.workspace.workspaceFolders) {
-		workspacePaths.push(workspacePath.uri.fsPath);
-	}
-	return workspacePaths;
-}
+export let crashCache = new CoverageCache();
 
-async function getZcovPath(progress?: MyProgress, token?: vscode.CancellationToken) {
-	progress?.report({ message: 'Searching for .zcov file' });
-	const workspacePaths = getWorkspacePaths();
-
-	let counter = 0;
-	let zcovPath = undefined;
-	for (const workspacePath of workspacePaths) {
-		await findAllFilesRecursively(workspacePath, path => {
-			if (path.endsWith('.zcov')) {
-				zcovPath = path;
-			}
-			counter++;
-			progress?.report({ message: `[${counter}] Scanning.` });
-		}, token);
-	}
-
-	return zcovPath;
-}
-
-export let coverageCache = new CoverageCache();
-
-type MyProgress = vscode.Progress<{ message?: string; increment?: number }>;
-
-async function reloadCoverageDataFromPath(path: string) {
-	await coverageCache.loadZcovFiles(path);
+async function reloadCrashDataFromPath(path: string) {
+	await crashCache.loadZcovFile(path);
 }
 
 export async function reloadZcovFile(path:string|undefined = undefined) {
 	if (path == undefined) {
-		await vscode.window.withProgress(
-			{
-				location: vscode.ProgressLocation.Notification,
-				cancellable: true,
-				title: 'Reload Coverage Data',
-			},
-			async (progress, token) => {
-				coverageCache = new CoverageCache();
-				progress.report({ increment: 0 });
-	
-				const zcovPath = await getZcovPath(progress, token);
-				if (zcovPath === undefined) {
-					vscode.window.showInformationMessage('Cannot find any .zcov files.');
-					return;
-				}
-	
-				await reloadCoverageDataFromPath(zcovPath);
-			}
-		);
+		crashCache = new CoverageCache();
+		const zcovPath = await findFile("crashd.zcov");
+		if (zcovPath === undefined) {
+			vscode.window.showInformationMessage('Cannot find any .zcov files.');
+			return;
+		}
+		await reloadCrashDataFromPath(zcovPath.fsPath);
 	} else {
-		await reloadCoverageDataFromPath(path);
+		await reloadCrashDataFromPath(path);
 	}
 }
 
-async function COMMAND_reloadZcovFiles(context: vscode.ExtensionContext) {
+async function cmd_reloadZcovFiles(context: vscode.ExtensionContext) {
 	await reloadZcovFile();
 	await showDecorations(context);
 }
 
-async function COMMAND_hideDecorations(context: vscode.ExtensionContext) {
+async function cmd_hideDecorations(context: vscode.ExtensionContext) {
 	for (const editor of vscode.window.visibleTextEditors) {
-		editor.setDecorations(calledLinesDecorationType, []);
+		editor.setDecorations(dataflowLinesDecorationType, []);
 		editor.setDecorations(execLinesDecorationType, []);
 		editor.setDecorations(allocLinesDecorationType, []);
 		editor.setDecorations(crashLinesDecorationType, []);
 	}
-	isShowingDecorations = false;
+	decorations = false;
 }
 
 export async function showGraph(context: vscode.ExtensionContext) {
-	if (!isCoverageDataLoaded()) {
+	if (!isCrashDataLoaded()) {
 		await reloadZcovFile();
 	}
-	
-	// Access the graph by name
-	const graph = coverageCache.graphs
+
+	const graph = crashCache.graphs
 	if (graph === undefined) {
 		vscode.window.showInformationMessage('No graph data to show.');
 		return;
@@ -216,7 +157,6 @@ export async function showGraph(context: vscode.ExtensionContext) {
 
 	GraphPanel.createOrShow(context.extensionPath);
 	if (GraphPanel.currentPanel) {
-		
 		//// Fake graph data
 		// GraphPanel.currentPanel.doModelUpdate('{"id": "root", "layoutOptions": {"algorithm": "layered", "elk.direction": "DOWN", "hierarchyHandling": "INCLUDE_CHILDREN"}, "children": [{"id": "group_pcre_exec.c", "children": [{"id": "pcre_exec.c6766", "layoutOptions": {"elk.direction": "DOWN"}, "labels": [{"id": "pcre_exec.c6766_label", "text": "6767      while (t < md->end_subject && !IS_NEWLINE(t)) t++;"}], "width": 490, "height": 16}, {"id": "pcre_exec.c1729", "labels": [{"id": "pcre_exec.c1729_label", "text": "1730        if ((rrc = (*PUBL(callout))(&cb)) > 0) RRETURN(MATCH_NOMATCH);"}], "width": 602, "height": 16}, {"id": "pcre_exec.c6553", "labels": [{"id": "pcre_exec.c6553_label", "text": "6554  md->start_subject = (PCRE_PUCHAR)subject;"}], "width": 386, "height": 16}, {"id": "pcre_exec.c1719", "labels": [{"id": "pcre_exec.c1719_label", "text": "1720        cb.start_match      = (int)(mstart - md->start_subject);"}], "width": 554, "height": 16}, {"id": "pcre_exec.c1547", "labels": [{"id": "pcre_exec.c1547_label", "text": "1548          mstart = md->start_match_ptr;   /* In case \\\\K reset it */"}], "width": 578, "height": 16}, {"id": "pcre_exec.c1712", "labels": [{"id": "pcre_exec.c1712_label", "text": "1713        cb.subject          = (PCRE_SPTR)md->start_subject;"}], "width": 514, "height": 16}, {"id": "pcre_exec.c3249", "labels": [{"id": "pcre_exec.c3249_label", "text": "3250        if (ecode[1] != *eptr++) RRETURN(MATCH_NOMATCH);"}], "width": 490, "height": 16}, {"id": "pcre_exec.c2109", "labels": [{"id": "pcre_exec.c2109_label", "text": "2110      break;"}], "width": 138, "height": 16}, {"id": "pcre_exec.c1935", "labels": [{"id": "pcre_exec.c1935_label", "text": "1936        md->start_match_ptr = mstart;"}], "width": 338, "height": 16}, {"id": "pcre_exec.c6935", "labels": [{"id": "pcre_exec.c6935_label", "text": "6936    rc = match(start_match, md->start_code, start_match, 2, md, NULL, 0);"}], "width": 626, "height": 16}], "edges": [{"id": "edge_pcre_exec.c1719pcre_exec.c1719", "source": "pcre_exec.c1719", "target": "pcre_exec.c1719"}, {"id": "edge_pcre_exec.c1719pcre_exec.c1712", "source": "pcre_exec.c1719", "target": "pcre_exec.c1712"}, {"id": "edge_pcre_exec.c1712pcre_exec.c6553", "source": "pcre_exec.c1712", "target": "pcre_exec.c6553"}, {"id": "edge_pcre_exec.c1712pcre_exec.c6935", "source": "pcre_exec.c1712", "target": "pcre_exec.c6935"}, {"id": "edge_pcre_exec.c6935pcre_exec.c6766", "source": "pcre_exec.c6935", "target": "pcre_exec.c6766"}, {"id": "edge_pcre_exec.c1719pcre_exec.c1547", "source": "pcre_exec.c1719", "target": "pcre_exec.c1547"}, {"id": "edge_pcre_exec.c1547pcre_exec.c1935", "source": "pcre_exec.c1547", "target": "pcre_exec.c1935"}, {"id": "edge_pcre_exec.c1935pcre_exec.c2109", "source": "pcre_exec.c1935", "target": "pcre_exec.c2109"}, {"id": "edge_pcre_exec.c2109pcre_exec.c3249", "source": "pcre_exec.c2109", "target": "pcre_exec.c3249"}, {"id": "edge_pcre_exec.c1712pcre_exec.c1712", "source": "pcre_exec.c1712", "target": "pcre_exec.c1712"}], "labels": [{"id": "group_pcre_exec.c_label", "text": "pcre_exec.c", "width": 98, "height": 16}]}, {"id": "group_pcretest.c", "layoutOptions": {"elk.direction": "DOWN"}, "children": [{"id": "pcretest.c2250", "labels": [{"id": "pcretest.c2250_label", "text": "2251  {"}], "width": 66, "height": 16}, {"id": "pcretest.c2283", "labels": [{"id": "pcretest.c2283_label", "text": "2284  HELLO_PCHARS(post_start, cb->subject, cb->start_match,"}], "width": 442, "height": 16}], "edges": [{"id": "edge_pcretest.c2283pcretest.c2250", "source": "pcretest.c2283", "target": "pcretest.c2250"}], "labels": [{"id": "group_pcretest.c_label", "text": "pcretest.c", "width": 90, "height": 16}]}], "edges": [{"id": "edge_pcretest.c2283pcre_exec.c1719", "source": "pcretest.c2283", "target": "pcre_exec.c1719"}, {"id": "edge_pcretest.c2250pcre_exec.c1729", "source": "pcretest.c2250", "target": "pcre_exec.c1729"}]}');
 		
@@ -232,11 +172,11 @@ async function showDecorations(context: vscode.ExtensionContext, graph:boolean =
 	if (graph) {
 		await showGraph(context);
 	}
-	isShowingDecorations = true;
+	decorations = true;
 }
 
-async function COMMAND_showDecorations(context: vscode.ExtensionContext, graph:boolean = true) {
-	if (!isCoverageDataLoaded()) {
+async function cmd_showDecorations(context: vscode.ExtensionContext, graph:boolean = true) {
+	if (!isCrashDataLoaded()) {
 		await reloadZcovFile();
 	}
 	await showDecorations(context, graph);
@@ -244,14 +184,14 @@ async function COMMAND_showDecorations(context: vscode.ExtensionContext, graph:b
 
 function findCachedDataForFile(absolutePath: string): ZcovFileData | undefined {
 	// Check if there is cached data for the absolute path
-	const dataOfFile = coverageCache.dataByFile.get(absolutePath);
+	const dataOfFile = crashCache.fileData.get(absolutePath);
 	if (dataOfFile !== undefined) {
 		return dataOfFile;
 	}
 	// Check if there is cached data for the base name
 	// TODO: This will fail for nested files with different absolute paths
 	// 		 but the same base name.
-	for (const [storedPath, dataOfFile] of coverageCache.dataByFile.entries()) {
+	for (const [storedPath, dataOfFile] of crashCache.fileData.entries()) {
 		if (absolutePath.endsWith(storedPath)) {
 			return dataOfFile;
 		}
@@ -259,8 +199,8 @@ function findCachedDataForFile(absolutePath: string): ZcovFileData | undefined {
 	return undefined;
 }
 
-function isCoverageDataLoaded() {
-	return coverageCache.dataByFile.size > 0;
+function isCrashDataLoaded() {
+	return crashCache.fileData.size > 0;
 }
 
 function groupData<T, Key>(values: T[], getKey: (value: T) => Key): Map<Key, T[]> {
@@ -272,12 +212,6 @@ function groupData<T, Key>(values: T[], getKey: (value: T) => Key): Map<Key, T[]
 		}
 	}
 	return map;
-}
-
-function createRangeForLine(lineIndex: number) {
-	return new vscode.Range(
-		new vscode.Position(lineIndex, 0),
-		new vscode.Position(lineIndex, 100000));
 }
 
 function createExecLineDecoration(range: vscode.Range, lineMeta: string) {
@@ -328,7 +262,7 @@ function createCrashLineDecoration(range: vscode.Range, lineMeta: string) {
 	return decoration;
 }
 
-function createCalledLineDecoration(range: vscode.Range, lineMeta: string) {
+function createDataflowLineDecoration(range: vscode.Range, lineMeta: string) {
 	const decoration: vscode.DecorationOptions = {
 		range: range,
 		renderOptions: {
@@ -342,23 +276,26 @@ function createCalledLineDecoration(range: vscode.Range, lineMeta: string) {
 	return decoration;
 }
 
-class LineDecorationsGroup {
-	calledLineDecorations: vscode.DecorationOptions[] = [];
+class LineDecorations {
+	dataflowLineDecorations: vscode.DecorationOptions[] = [];
 	execLineDecorations: vscode.DecorationOptions[] = [];
 	allocLineDecorations: vscode.DecorationOptions[] = [];
 	crashLineDecorations: vscode.DecorationOptions[] = [];
 };
 
-function createDecorationsForFile(linesDataOfFile: ZcovLineData[]): LineDecorationsGroup {
-	const decorations = new LineDecorationsGroup();
+function createDecorations(fileData: ZcovLineData[]): LineDecorations {
+	const decorations = new LineDecorations();
 
-	const hitLines = groupData(linesDataOfFile, x => x.line_number);
+	const hitLines = groupData(fileData, x => x.line_number);
 
-	for (const lineDataArray of hitLines.values()) {
-		const lineIndex = lineDataArray[0].line_number - 1;
-		const lineMeta = lineDataArray[0].meta;
-		const lineKind = lineDataArray[0].kind;
-		const range = createRangeForLine(lineIndex);
+	for (const lineData of hitLines.values()) {
+		const lineIndex = lineData[0].line_number - 1;
+		const lineMeta = lineData[0].meta;
+		const lineKind = lineData[0].kind;
+		const range = new vscode.Range(
+			new vscode.Position(lineIndex, 0),
+			new vscode.Position(lineIndex, 100000)
+		);
 		if (lineKind === "EXEC") {
 			decorations.execLineDecorations.push(createExecLineDecoration(range, lineMeta));
 		} else if (lineKind === "ALLOC"){
@@ -366,7 +303,7 @@ function createDecorationsForFile(linesDataOfFile: ZcovLineData[]): LineDecorati
 		} else if (lineKind === "FLOW_END"){
 			decorations.crashLineDecorations.push(createCrashLineDecoration(range, lineMeta));
 		} else {
-			decorations.calledLineDecorations.push(createCalledLineDecoration(range, lineMeta));
+			decorations.dataflowLineDecorations.push(createDataflowLineDecoration(range, lineMeta));
 		}
 	}
 
@@ -375,15 +312,15 @@ function createDecorationsForFile(linesDataOfFile: ZcovLineData[]): LineDecorati
 
 export async function decorateEditor(editor: vscode.TextEditor) {
 	const path = editor.document.uri.fsPath;
-	const linesDataOfFile = findCachedDataForFile(path)?.lines;
-	if (linesDataOfFile === undefined) {
+	const fileData = findCachedDataForFile(path)?.lines;
+	if (fileData === undefined) {
 		return new Promise(resolve => {
 			resolve(undefined);
 		});
 	}
 
-	const decorations = createDecorationsForFile(linesDataOfFile);
-	editor.setDecorations(calledLinesDecorationType, decorations.calledLineDecorations);
+	const decorations = createDecorations(fileData);
+	editor.setDecorations(dataflowLinesDecorationType, decorations.dataflowLineDecorations);
 	editor.setDecorations(execLinesDecorationType, decorations.execLineDecorations);
 	editor.setDecorations(allocLinesDecorationType, decorations.allocLineDecorations);
 	editor.setDecorations(crashLinesDecorationType, decorations.crashLineDecorations);
@@ -393,7 +330,7 @@ export async function decorateEditor(editor: vscode.TextEditor) {
 }
 
 async function provideHoverEdges(document: vscode.TextDocument, position: vscode.Position): Promise<vscode.Hover | undefined>{
-	if (!isCoverageDataLoaded()) {
+	if (!isCrashDataLoaded()) {
 		await reloadZcovFile();
 	}
 
