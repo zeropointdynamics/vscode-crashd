@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { GraphPanel } from './graphPanel';
-import { CoverageCache, ZcovLineData, ZcovFileData } from './coverageCache';
+import { CrashCache, ZcovLineData, ZcovFileData } from './crashCache';
 
 let decorations: boolean = false;
 export let extensionContext: vscode.ExtensionContext;
@@ -109,7 +109,7 @@ const crashLinesDecorationType = vscode.window.createTextEditorDecorationType({
 	rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
 });
 
-export let crashCache = new CoverageCache();
+export let crashCache = new CrashCache();
 
 async function reloadCrashDataFromPath(path: string) {
 	await crashCache.loadZcovFile(path);
@@ -117,7 +117,7 @@ async function reloadCrashDataFromPath(path: string) {
 
 export async function reloadZcovFile(path:string|undefined = undefined) {
 	if (path == undefined) {
-		crashCache = new CoverageCache();
+		crashCache = new CrashCache();
 		const zcovPath = await findFile("crashd.zcov");
 		if (zcovPath === undefined) {
 			vscode.window.showInformationMessage('Cannot find any .zcov files.');

@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import * as vscode from 'vscode';
 
 // Cache for data loaded from the crashd.zcov file.
-export class CoverageCache {
+export class CrashCache {
     fileData: Map<string, ZcovFileData> = new Map();
     graphs:any[] = [];
 
