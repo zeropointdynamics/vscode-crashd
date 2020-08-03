@@ -57,7 +57,9 @@ export function activate(context: vscode.ExtensionContext) {
 	}
 }
 
-export function deactivate() { }
+export function deactivate() {
+	GraphPanel.currentPanel?.dispose();
+}
 
 // SHOULD BE A DARK BLUE
 const dataflowLineColor = 'rgba(50, 40, 260, 0.4)';
@@ -120,7 +122,7 @@ export async function reloadZcovFile(path:string|undefined = undefined) {
 		crashCache = new CrashCache();
 		const zcovPath = await findFile("crashd.zcov");
 		if (zcovPath === undefined) {
-			vscode.window.showInformationMessage('Cannot find any .zcov files.');
+			vscode.window.showWarningMessage('Cannot find crashd.zcov file');
 			return;
 		}
 		await reloadCrashDataFromPath(zcovPath.fsPath);
@@ -182,18 +184,21 @@ async function cmd_showDecorations(context: vscode.ExtensionContext, graph:boole
 	await showDecorations(context, graph);
 }
 
-function findCachedDataForFile(absolutePath: string): ZcovFileData | undefined {
-	// Check if there is cached data for the absolute path
-	const dataOfFile = crashCache.fileData.get(absolutePath);
-	if (dataOfFile !== undefined) {
-		return dataOfFile;
+function getCacheData(absolutePath: string): ZcovFileData | undefined {
+	// Return cached line data of a single source file
+
+	// Check absolute path
+	const fileData = crashCache.fileData.get(absolutePath);
+	if (fileData !== undefined) {
+		return fileData;
 	}
-	// Check if there is cached data for the base name
-	// TODO: This will fail for nested files with different absolute paths
+
+	// Check base name
+	// TODO: This may be incorrect for nested files with different absolute paths
 	// 		 but the same base name.
-	for (const [storedPath, dataOfFile] of crashCache.fileData.entries()) {
-		if (absolutePath.endsWith(storedPath)) {
-			return dataOfFile;
+	for (const [basename, fileData] of crashCache.fileData.entries()) {
+		if (absolutePath.endsWith(basename)) {
+			return fileData;
 		}
 	}
 	return undefined;
@@ -201,17 +206,6 @@ function findCachedDataForFile(absolutePath: string): ZcovFileData | undefined {
 
 function isCrashDataLoaded() {
 	return crashCache.fileData.size > 0;
-}
-
-function groupData<T, Key>(values: T[], getKey: (value: T) => Key): Map<Key, T[]> {
-	const map: Map<Key, T[]> = new Map();
-	for (const value of values) {
-		const key: Key = getKey(value);
-		if (map.get(key)?.push(value) === undefined) {
-			map.set(key, [value]);
-		}
-	}
-	return map;
 }
 
 function createExecLineDecoration(range: vscode.Range, lineMeta: string) {
@@ -286,12 +280,10 @@ class LineDecorations {
 function createDecorations(fileData: ZcovLineData[]): LineDecorations {
 	const decorations = new LineDecorations();
 
-	const hitLines = groupData(fileData, x => x.line_number);
-
-	for (const lineData of hitLines.values()) {
-		const lineIndex = lineData[0].line_number - 1;
-		const lineMeta = lineData[0].meta;
-		const lineKind = lineData[0].kind;
+	for (const line of fileData) {
+		const lineIndex = line.line_number - 1;
+		const lineMeta = line.meta;
+		const lineKind = line.kind;
 		const range = new vscode.Range(
 			new vscode.Position(lineIndex, 0),
 			new vscode.Position(lineIndex, 100000)
@@ -312,7 +304,7 @@ function createDecorations(fileData: ZcovLineData[]): LineDecorations {
 
 export async function decorateEditor(editor: vscode.TextEditor) {
 	const path = editor.document.uri.fsPath;
-	const fileData = findCachedDataForFile(path)?.lines;
+	const fileData = getCacheData(path)?.lines;
 	if (fileData === undefined) {
 		return new Promise(resolve => {
 			resolve(undefined);
@@ -335,15 +327,14 @@ async function provideHoverEdges(document: vscode.TextDocument, position: vscode
 	}
 
 	const path = document.uri.fsPath;
-	const linesDataOfFile = findCachedDataForFile(path)?.lines;
-	if (linesDataOfFile === undefined) {
+	const fileData = getCacheData(path)?.lines;
+	if (fileData === undefined) {
 		return;
 	}
 
-	const hitLines = groupData(linesDataOfFile, x => x.line_number);
-	for (const lineDataArray of hitLines.values()) {
-		const lineIndex = lineDataArray[0].line_number - 1;
-		const lineKind = lineDataArray[0].kind;
+	for (const line of fileData) {
+		const lineIndex = line.line_number - 1;
+		const lineKind = line.kind;
 		if (position.line == lineIndex ) {
 			return new Promise<vscode.Hover>((resolve, reject) => {
 				let mdContent = "";
@@ -353,7 +344,7 @@ async function provideHoverEdges(document: vscode.TextDocument, position: vscode
 					return;
 				}
 
-				const asm = lineDataArray[0].asm;
+				const asm = line.asm;
 
 				if (asm && asm.length > 0) {
 					mdContent += "\`\`\`asm\n";
