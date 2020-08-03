@@ -39,7 +39,7 @@ suite('Extension Test Suite', () => {
 		}
 
 		assert.strictEqual(decorations.length, 1);
-		assert.strictEqual(decorations[0].calledLineDecorations.length, 5);
+		assert.strictEqual(decorations[0].dataflowLineDecorations.length, 5);
 		assert.strictEqual(decorations[0].execLineDecorations.length, 6);
 		assert.strictEqual(decorations[0].allocLineDecorations.length, 0);
 		assert.strictEqual(decorations[0].crashLineDecorations.length, 1);
