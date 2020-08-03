@@ -47,7 +47,7 @@ suite('Extension Test Suite', () => {
 	});
 
 	test('should show the graph panel', async () => {
-		const extension = vscode.extensions.getExtension("zp.crashd");
+		const extension = vscode.extensions.getExtension("zeropoint.crashd");
 		if (!extension?.isActive) {
 			await extension?.activate();
 		}
